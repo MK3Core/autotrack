@@ -32,7 +32,7 @@ export default function ImportExport() {
       <div className="card data-section">
         <h3>Import</h3>
         <p>
-          Import a CSV or an Excel export (.xlsx), including a Drivvo export — its Vehicles, Refueling, and
+          Import a CSV or an Excel export (.xlsx), including a Drivvo export. Its Vehicles, Refueling, and
           Services sheets are all recognized automatically. Vehicles are matched by name; new ones are created
           as needed. Nothing is deleted or overwritten by an import.
         </p>

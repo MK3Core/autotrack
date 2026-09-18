@@ -176,7 +176,7 @@ export default function FillupForm() {
         )}
 
         <fieldset className="fillup-form__triangle">
-          <legend>Enter any two — the third is calculated{filledCount < 2 ? ' automatically' : ''}</legend>
+          <legend>Enter any two: the third is calculated{filledCount < 2 ? ' automatically' : ''}</legend>
           <label>
             Price / gal ($)
             <input

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { useVehicles } from '../lib/VehicleContext';
-import { computeMpgSeries } from '../lib/calc';
+import { computeLifetimeMpgStats, computeMpgSeries } from '../lib/calc';
 import type { Fillup } from '../types';
 import './Dashboard.css';
 
@@ -32,8 +32,7 @@ export default function Dashboard() {
 
   const withMpg = computeMpgSeries(fillups).sort((a, b) => b.odometer - a.odometer);
   const latest = withMpg[0];
-  const mpgValues = withMpg.map((f) => f.mpg).filter((m): m is number => m !== null);
-  const avgMpg = mpgValues.length ? mpgValues.reduce((a, b) => a + b, 0) / mpgValues.length : null;
+  const lifetimeStats = computeLifetimeMpgStats(fillups);
   const lastPrice = withMpg.find((f) => f.pricePerGallon !== undefined)?.pricePerGallon;
 
   return (
@@ -42,19 +41,19 @@ export default function Dashboard() {
 
       <div className="dashboard__stats card">
         <div className="stat">
-          <span className="stat__value">{latest?.mpg ?? '—'}</span>
+          <span className="stat__value">{latest?.mpg ?? 'N/A'}</span>
           <span className="stat__label">Latest MPG</span>
         </div>
         <div className="stat">
-          <span className="stat__value">{avgMpg ? avgMpg.toFixed(1) : '—'}</span>
-          <span className="stat__label">Avg MPG</span>
+          <span className="stat__value">{lifetimeStats.average ?? 'N/A'}</span>
+          <span className="stat__label">Lifetime Avg MPG</span>
         </div>
         <div className="stat">
-          <span className="stat__value">{lastPrice !== undefined ? `$${lastPrice.toFixed(2)}` : '—'}</span>
+          <span className="stat__value">{lastPrice !== undefined ? `$${lastPrice.toFixed(2)}` : 'N/A'}</span>
           <span className="stat__label">Last Price/gal</span>
         </div>
         <div className="stat">
-          <span className="stat__value">{latest ? latest.odometer.toLocaleString() : '—'}</span>
+          <span className="stat__value">{latest ? latest.odometer.toLocaleString() : 'N/A'}</span>
           <span className="stat__label">Odometer</span>
         </div>
       </div>
@@ -73,6 +72,15 @@ export default function Dashboard() {
                 <strong>{f.date}</strong> · {f.odometer.toLocaleString()} mi
                 {f.missedFillup && <span className="badge badge--warn"> missed gap</span>}
                 {!f.fullTank && <span className="badge"> partial</span>}
+                {f.mpgOutlier && !f.missedFillup && (
+                  <span
+                    className="badge badge--warn"
+                    title="This mpg is way outside this vehicle's usual range. Check for a missed fillup."
+                  >
+                    {' '}
+                    check mileage
+                  </span>
+                )}
               </div>
               <div className="dashboard__recent-meta">
                 {f.gallons !== undefined && <span>{f.gallons.toFixed(2)} gal</span>}

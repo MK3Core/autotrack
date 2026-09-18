@@ -25,6 +25,9 @@ export interface Fillup {
   /** true = a fillup happened before this one that was never logged, so the
    *  odometer delta back to the previous logged fillup cannot be trusted */
   missedFillup: boolean;
+  /** true = the user confirmed this entry's mpg outlier flag is a real,
+   *  accurate reading (not a missed fillup), so stop prompting about it */
+  outlierAcknowledged?: boolean;
   gasStation?: string;
   notes?: string;
   createdAt: string;
@@ -58,4 +61,7 @@ export type FillupCalcField = 'pricePerGallon' | 'totalCost' | 'gallons';
 
 export interface FillupWithMpg extends Fillup {
   mpg: number | null;
+  /** true when `mpg` is a statistical outlier vs. this vehicle's other fillups
+   *  (a common symptom of an un-flagged missed fillup) */
+  mpgOutlier: boolean;
 }

@@ -8,6 +8,55 @@
   margin-bottom: 1rem;
 }
 
+.reports__lifetime-card {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.reports__outlier-note {
+  font-size: 0.85rem;
+  color: var(--warn);
+  margin: 0 0 1.25rem 0;
+}
+
+.reports__compare-card {
+  margin-bottom: 1.25rem;
+}
+
+.reports__compare-list {
+  list-style: none;
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reports__compare-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.reports__compare-list li:hover {
+  background: var(--surface-2);
+}
+
+.reports__compare-list li.is-selected {
+  background: var(--accent-dim);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.reports__compare-value {
+  font-variant-numeric: tabular-nums;
+}
+
 .reports__chart-card {
   margin-bottom: 1.25rem;
 }

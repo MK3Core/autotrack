@@ -1,23 +1,131 @@
-.fillups-table-wrap {
-  overflow-x: auto;
+.timeline {
+  position: relative;
+  padding-left: 1.1rem;
+  border-left: 2px solid var(--border);
+  margin-top: 1rem;
 }
 
-.fillups-table {
-  width: 100%;
-  border-collapse: collapse;
+.timeline__month {
+  margin: 1.25rem 0 0.6rem -1.1rem;
+  padding-left: 1.1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.timeline > .timeline__month:first-child {
+  margin-top: 0;
+}
+
+.timeline__row {
+  position: relative;
+  margin-bottom: 0.6rem;
+}
+
+.timeline__dot {
+  position: absolute;
+  left: -1.42rem;
+  top: 0.9rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+.timeline__card {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.timeline__card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+}
+
+.timeline__odometer {
+  color: var(--text-dim);
   font-size: 0.9rem;
 }
 
-.fillups-table th,
-.fillups-table td {
-  text-align: left;
-  padding: 0.5rem 0.6rem;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+.timeline__card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  align-items: center;
 }
 
-.fillups-table th {
+.timeline__mpg {
+  color: var(--good);
+  font-weight: 600;
+}
+
+.timeline__row--ghost {
+  margin-bottom: 0.6rem;
+}
+
+.timeline__dot--ghost {
+  background: transparent;
+  border: 2px dashed var(--text-dim);
+  opacity: 0.7;
+}
+
+.ghost-card {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  background: transparent;
+  opacity: 0.75;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.ghost-card:hover {
+  opacity: 1;
+}
+
+.ghost-card__label {
   color: var(--text-dim);
-  font-size: 0.75rem;
-  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.ghost-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ghost-card__actions button {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.timeline__sentinel {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.timeline__sentinel button {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.timeline__end {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 1rem 0;
 }
