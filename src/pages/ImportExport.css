@@ -1,0 +1,23 @@
+.data-section {
+  margin-bottom: 1.25rem;
+}
+
+.data-section p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.data-section__error {
+  color: var(--danger);
+}
+
+.data-section__summary {
+  margin-top: 0.5rem;
+  padding-left: 1.2rem;
+}
+
+.data-section__buttons {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

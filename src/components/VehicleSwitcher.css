@@ -1,0 +1,51 @@
+.vswitch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.vswitch--empty {
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.vswitch__chips {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+}
+
+.vswitch__chips::-webkit-scrollbar {
+  display: none;
+}
+
+.vswitch__chip {
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.vswitch__chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.vswitch__manage,
+.vswitch__add-link {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  text-decoration: none;
+}

@@ -1,0 +1,17 @@
+.reports__vehicle-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  max-width: 280px;
+  margin-bottom: 1rem;
+}
+
+.reports__chart-card {
+  margin-bottom: 1.25rem;
+}
+
+.reports__empty {
+  color: var(--text-dim);
+}

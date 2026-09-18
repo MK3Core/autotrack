@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AutoTrack</string>
+    <string name="title_activity_main">AutoTrack</string>
+    <string name="package_name">com.autotrack.app</string>
+    <string name="custom_url_scheme">com.autotrack.app</string>
+</resources>
