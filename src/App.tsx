@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import VehicleSwitcher from './components/VehicleSwitcher';
 import BottomNav from './components/BottomNav';
+import NativeBackHandler from './components/NativeBackHandler';
 import FillupForm from './pages/FillupForm';
 import Log from './pages/Log';
 import Vehicles from './pages/Vehicles';
@@ -11,6 +12,7 @@ import './App.css';
 export default function App() {
   return (
     <div className="app-shell">
+      <NativeBackHandler />
       <VehicleSwitcher />
       <main className="app-content">
         <Routes>

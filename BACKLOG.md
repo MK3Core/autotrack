@@ -45,24 +45,3 @@ The fillup form's numeric fields (notably Total Cost, which uses
 `type="text" inputMode="decimal"` to get proper currency formatting) should
 be checked on a real phone to confirm the numeric keypad appears as
 expected rather than the full keyboard. Not verified yet.
-
-## Android back gesture / back button crashes the app
-
-Swiping in from the edge (or the Android back gesture/button generally)
-crashes the app instead of navigating back. Capacitor's WebView doesn't
-automatically wire Android's back gesture into the app's own routing (React
-Router's `HashRouter`) - it needs an explicit native-side listener
-(`App.addListener('backButton', ...)` from `@capacitor/app`) that's not
-currently installed or configured. Without it, Android's default handling
-is likely conflicting with the SPA's routing state in a way that crashes
-rather than gracefully falling through.
-
-Desired behavior once fixed: the back gesture should do exactly what the
-in-app `BackButton` component does (`src/components/BackButton.tsx`) -
-navigate back in history, or fall through to the Log page on a top-level
-screen that has no back button of its own (Log, Reports, Vehicles, Data).
-Ideally the same navigation logic gets shared between the two rather than
-reimplemented separately.
-
-Not yet investigated in depth - root cause above is a reasonable guess, not
-a confirmed diagnosis.

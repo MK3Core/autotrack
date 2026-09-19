@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.2",
     "@capawesome/capacitor-android-edge-to-edge-support": "^8.0.8",
     "dexie": "^4.4.6",

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useGoBack } from '../lib/useGoBack';
 import './BackButton.css';
 
 /**
@@ -8,18 +8,7 @@ import './BackButton.css';
  * (e.g. editing a specific fillup) does.
  */
 export default function BackButton({ fallback = '/' }: { fallback?: string }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  function handleBack() {
-    // location.key is 'default' when this page was loaded directly (no in-app
-    // history to go back to, e.g. a bookmark or a page refresh).
-    if (location.key === 'default') {
-      navigate(fallback);
-    } else {
-      navigate(-1);
-    }
-  }
+  const handleBack = useGoBack(fallback);
 
   return (
     <button type="button" className="back-button" onClick={handleBack}>
