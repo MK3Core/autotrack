@@ -112,3 +112,13 @@ h1, h2, h3 {
   background: var(--warn);
   color: #2b1d00;
 }
+
+/* Recharts makes its chart surface focusable (accessibilityLayer), so tapping
+   a chart on a phone draws a heavy focus ring around it. Tooltips/scrubbing
+   still work; only the ring and tap flash are suppressed. */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface {
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
