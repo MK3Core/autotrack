@@ -1,3 +1,5 @@
+See [BACKLOG.md](./BACKLOG.md) for planned/deferred future work (backend + sync, maintenance records, app packaging).
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
