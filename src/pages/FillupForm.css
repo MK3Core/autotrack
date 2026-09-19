@@ -44,16 +44,27 @@
   padding: 0 0.3rem;
 }
 
-.fillup-form__checkbox {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  color: var(--text);
+.fillup-form__toggle-row {
+  display: flex;
+  gap: 0.75rem;
 }
 
-.fillup-form__checkbox input {
-  width: auto;
+.fillup-form__toggle {
+  flex: 1;
+  padding: 0.9rem 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.fillup-form__toggle.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
 }
 
 .fillup-form__actions {

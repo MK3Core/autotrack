@@ -40,6 +40,8 @@ export default function FillupForm() {
   const [missedFillup, setMissedFillup] = useState(false);
   const [gasStation, setGasStation] = useState('');
   const [notes, setNotes] = useState('');
+  const [totalCostFocused, setTotalCostFocused] = useState(false);
+  const [totalCostDraft, setTotalCostDraft] = useState('');
 
   const vehicleFillups = useLiveQuery<Fillup[], Fillup[]>(
     () =>
@@ -103,7 +105,8 @@ export default function FillupForm() {
   }, [values.pricePerGallon, values.totalCost, values.gallons, editedOrder]);
 
   function handleTriangleChange(field: FillupCalcField, raw: string) {
-    const val = raw === '' ? undefined : parseFloat(raw);
+    const parsed = parseFloat(raw);
+    const val = raw === '' || isNaN(parsed) ? undefined : parsed;
     setValues((prev) => ({ ...prev, [field]: val }));
     setEditedOrder((prev) => [...prev.filter((f) => f !== field), field].slice(-2));
   }
@@ -187,24 +190,6 @@ export default function FillupForm() {
           />
         </label>
 
-        <label>
-          Gas Type
-          <select value={gasType} onChange={(e) => setGasType(e.target.value)}>
-            {GAS_TYPE_PRESETS.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-            <option value="Custom">Custom…</option>
-          </select>
-        </label>
-        {gasType === 'Custom' && (
-          <label>
-            Custom gas type
-            <input value={customGasType} onChange={(e) => setCustomGasType(e.target.value)} />
-          </label>
-        )}
-
         <fieldset className="fillup-form__triangle">
           <legend>Enter any two: the third is calculated{filledCount < 2 ? ' automatically' : ''}</legend>
           <label>
@@ -230,24 +215,64 @@ export default function FillupForm() {
           <label>
             Total cost ($)
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
-              step="0.01"
-              value={values.totalCost ?? ''}
-              onChange={(e) => handleTriangleChange('totalCost', e.target.value)}
+              value={
+                totalCostFocused
+                  ? totalCostDraft
+                  : values.totalCost !== undefined
+                    ? values.totalCost.toFixed(2)
+                    : ''
+              }
+              onFocus={() => {
+                setTotalCostFocused(true);
+                setTotalCostDraft(values.totalCost !== undefined ? String(values.totalCost) : '');
+              }}
+              onChange={(e) => {
+                setTotalCostDraft(e.target.value);
+                handleTriangleChange('totalCost', e.target.value);
+              }}
+              onBlur={() => setTotalCostFocused(false)}
             />
           </label>
         </fieldset>
 
-        <label className="fillup-form__checkbox">
-          <input type="checkbox" checked={!fullTank} onChange={(e) => setFullTank(!e.target.checked)} />
-          Partial fillup
-        </label>
+        <div className="fillup-form__toggle-row">
+          <button
+            type="button"
+            className={`fillup-form__toggle ${!fullTank ? 'is-active' : ''}`}
+            aria-pressed={!fullTank}
+            onClick={() => setFullTank(!fullTank)}
+          >
+            Partial Fillup
+          </button>
+          <button
+            type="button"
+            className={`fillup-form__toggle ${missedFillup ? 'is-active' : ''}`}
+            aria-pressed={missedFillup}
+            onClick={() => setMissedFillup(!missedFillup)}
+          >
+            Missed Previous Fillup
+          </button>
+        </div>
 
-        <label className="fillup-form__checkbox">
-          <input type="checkbox" checked={missedFillup} onChange={(e) => setMissedFillup(e.target.checked)} />
-          Missed previous fillup
+        <label>
+          Gas Type
+          <select value={gasType} onChange={(e) => setGasType(e.target.value)}>
+            {GAS_TYPE_PRESETS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+            <option value="Custom">Custom…</option>
+          </select>
         </label>
+        {gasType === 'Custom' && (
+          <label>
+            Custom gas type
+            <input value={customGasType} onChange={(e) => setCustomGasType(e.target.value)} />
+          </label>
+        )}
 
         <label>
           Gas station
