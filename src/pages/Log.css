@@ -47,7 +47,7 @@
   margin-bottom: 0.3rem;
 }
 
-.timeline__odometer {
+.timeline__card-date {
   color: var(--text-dim);
   font-size: 0.9rem;
 }
@@ -126,6 +126,15 @@
 
 .ghost-card:hover {
   opacity: 1;
+}
+
+.ghost-card--static {
+  cursor: default;
+  user-select: none;
+}
+
+.ghost-card--static:hover {
+  opacity: 0.75;
 }
 
 .ghost-card__label {

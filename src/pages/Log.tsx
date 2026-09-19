@@ -116,7 +116,7 @@ export default function Log() {
             return (
               <div key={row.key} className="timeline__row timeline__row--ghost">
                 <div className="timeline__dot timeline__dot--ghost" />
-                <div className="ghost-card">
+                <div className={`ghost-card ${row.mode === 'confirmed' ? 'ghost-card--static' : ''}`}>
                   {row.mode === 'confirmed' ? (
                     <span className="ghost-card__label">
                       Fillup missing here. Mileage calc resets before this entry.
@@ -146,8 +146,8 @@ export default function Log() {
               <div className="timeline__dot" />
               <Link to={`/fillup/${f.id}`} className="timeline__card card">
                 <div className="timeline__card-top">
-                  <strong>{f.date}</strong>
-                  <span className="timeline__odometer">{f.odometer.toLocaleString()} mi</span>
+                  <strong>{f.odometer.toLocaleString()} mi</strong>
+                  <span className="timeline__card-date">{f.date}</span>
                 </div>
                 <div className="timeline__card-meta">
                   <span>{f.gasType}</span>
