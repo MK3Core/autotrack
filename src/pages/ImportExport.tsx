@@ -1,4 +1,8 @@
 import { useRef, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db';
+import ClearDataDialog from '../components/ClearDataDialog';
+import { clearAllData } from '../lib/clearData';
 import { exportVehicleCsv, importFile, type ImportSummary } from '../lib/importExport';
 import { useVehicles } from '../lib/VehicleContext';
 import './ImportExport.css';
@@ -9,6 +13,8 @@ export default function ImportExport() {
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const fillupCount = useLiveQuery(() => db.fillups.count(), [], 0);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -88,6 +94,35 @@ export default function ImportExport() {
           ))}
         </ul>
       </div>
+
+      <div className="card data-section data-section--danger">
+        <h3>Clear data</h3>
+        <p>
+          Permanently deletes all vehicles and fillups so you can start fresh. Export anything you want
+          to keep first.
+        </p>
+        <button
+          className="btn-danger"
+          disabled={vehicles.length === 0 && fillupCount === 0}
+          onClick={() => setConfirmingClear(true)}
+        >
+          Clear all data…
+        </button>
+      </div>
+
+      {confirmingClear && (
+        <ClearDataDialog
+          vehicleCount={vehicles.length}
+          fillupCount={fillupCount}
+          onCancel={() => setConfirmingClear(false)}
+          onConfirm={async () => {
+            await clearAllData();
+            setConfirmingClear(false);
+            setSummary(null);
+            setError(null);
+          }}
+        />
+      )}
     </div>
   );
 }

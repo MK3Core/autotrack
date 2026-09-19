@@ -66,3 +66,7 @@
 .data-section__vehicle-list li:last-child {
   border-bottom: none;
 }
+
+.data-section--danger {
+  border-color: var(--danger);
+}
