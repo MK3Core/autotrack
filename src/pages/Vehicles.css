@@ -44,11 +44,23 @@
   font-size: 0.85rem;
   color: var(--text-dim);
   flex: 1;
+  min-width: 0;
+}
+
+.vehicle-form input,
+.vehicle-form select,
+.vehicle-form textarea {
+  width: 100%;
 }
 
 .vehicle-form__row {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
+}
+
+.vehicle-form__row label {
+  flex: 1 1 120px;
 }
 
 .vehicle-form__actions {

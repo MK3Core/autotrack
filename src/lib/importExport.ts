@@ -309,7 +309,7 @@ export async function exportFillupsCSV() {
     }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const csv = XLSX.utils.sheet_to_csv(ws);
-  downloadBlob(`autotrack-fillups-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+  downloadBlob(`autotrack-fillups-${toDateString(new Date())}.csv`, csv, 'text/csv');
 }
 
 export async function exportVehiclesCSV() {
@@ -326,5 +326,5 @@ export async function exportVehiclesCSV() {
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const csv = XLSX.utils.sheet_to_csv(ws);
-  downloadBlob(`autotrack-vehicles-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+  downloadBlob(`autotrack-vehicles-${toDateString(new Date())}.csv`, csv, 'text/csv');
 }

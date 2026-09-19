@@ -26,6 +26,7 @@
 
 .fillup-form__row label {
   flex: 1;
+  min-width: 0;
 }
 
 .fillup-form__triangle {

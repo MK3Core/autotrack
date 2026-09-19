@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
+import BackButton from '../components/BackButton';
 import { useVehicles } from '../lib/VehicleContext';
 import { computeThirdValue } from '../lib/calc';
 import { GAS_TYPE_PRESETS, type Fillup, type FillupCalcField } from '../types';
@@ -11,7 +12,11 @@ import './FillupForm.css';
 const TRIANGLE_FIELDS: FillupCalcField[] = ['pricePerGallon', 'totalCost', 'gallons'];
 
 function today() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 function nowTime() {
   return new Date().toTimeString().slice(0, 5);
@@ -35,6 +40,30 @@ export default function FillupForm() {
   const [missedFillup, setMissedFillup] = useState(false);
   const [gasStation, setGasStation] = useState('');
   const [notes, setNotes] = useState('');
+
+  const vehicleFillups = useLiveQuery<Fillup[], Fillup[]>(
+    () =>
+      !existing && vehicleId
+        ? db.fillups.where('vehicleId').equals(vehicleId).toArray()
+        : Promise.resolve([]),
+    [vehicleId, existing],
+    [],
+  );
+  const appliedGasTypeForVehicle = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (existing) return;
+    if (!vehicleId || appliedGasTypeForVehicle.current === vehicleId) return;
+    if (!vehicleFillups.length) return;
+    const mostRecent = [...vehicleFillups].sort((a, b) => b.odometer - a.odometer)[0];
+    if (GAS_TYPE_PRESETS.includes(mostRecent.gasType as (typeof GAS_TYPE_PRESETS)[number])) {
+      setGasType(mostRecent.gasType);
+    } else {
+      setGasType('Custom');
+      setCustomGasType(mostRecent.gasType);
+    }
+    appliedGasTypeForVehicle.current = vehicleId;
+  }, [vehicleId, existing, vehicleFillups]);
 
   useEffect(() => {
     if (!existing) return;
@@ -118,6 +147,7 @@ export default function FillupForm() {
 
   return (
     <div>
+      <BackButton fallback={existing ? '/fillups' : '/'} />
       <h2>{existing ? 'Edit Fillup' : 'Add Fillup'}</h2>
       <form className="fillup-form card" onSubmit={handleSubmit}>
         <label>
@@ -210,13 +240,13 @@ export default function FillupForm() {
         </fieldset>
 
         <label className="fillup-form__checkbox">
-          <input type="checkbox" checked={fullTank} onChange={(e) => setFullTank(e.target.checked)} />
-          Filled tank completely
+          <input type="checkbox" checked={!fullTank} onChange={(e) => setFullTank(!e.target.checked)} />
+          Partial fillup
         </label>
 
         <label className="fillup-form__checkbox">
           <input type="checkbox" checked={missedFillup} onChange={(e) => setMissedFillup(e.target.checked)} />
-          A fillup before this one was never logged (breaks mileage calc)
+          Missed previous fillup
         </label>
 
         <label>
