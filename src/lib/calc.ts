@@ -1,4 +1,4 @@
-import type { Fillup, FillupWithMpg } from '../types';
+import type { Fillup, FillupWithMpg, MpgTier } from '../types';
 
 /**
  * Given any two of {pricePerGallon, totalCost, gallons}, compute the third.
@@ -30,6 +30,9 @@ export function computeThirdValue(values: {
   return values;
 }
 
+function round1(n: number) {
+  return Math.round(n * 10) / 10;
+}
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
@@ -61,7 +64,7 @@ function round3(n: number) {
  */
 export function computeMpgSeries(fillups: Fillup[]): FillupWithMpg[] {
   const sorted = [...fillups].sort((a, b) => a.odometer - b.odometer);
-  const result: FillupWithMpg[] = sorted.map((f) => ({ ...f, mpg: null, mpgOutlier: false }));
+  const result: FillupWithMpg[] = sorted.map((f) => ({ ...f, mpg: null, mpgOutlier: false, mpgTier: null }));
 
   let lastFullTankOdometer: number | null = null;
   let accumulatedGallons = 0;
@@ -99,7 +102,7 @@ export function computeMpgSeries(fillups: Fillup[]): FillupWithMpg[] {
     pendingPartialIndexes = [];
   });
 
-  return flagOutliers(result);
+  return assignMpgTiers(flagOutliers(result));
 }
 
 const MIN_SAMPLES_FOR_OUTLIER_CHECK = 5;
@@ -144,15 +147,53 @@ function flagOutliers(series: FillupWithMpg[]): FillupWithMpg[] {
   );
 }
 
+const MIN_SAMPLES_FOR_TIERS = 5;
+/** A fillup more than this many standard deviations from the vehicle's own
+ *  average mpg reads as best/low. */
+const TIER_Z_SCORE = 1;
+
+/**
+ * Ranks each fillup's mpg against this vehicle's own clean (non-outlier)
+ * history using a z-score: 1+ standard deviation below average -> low, 1+
+ * above -> best, everything else -> average. Standard deviation (rather than
+ * a fixed % of the average) is what actually normalizes for how volatile a
+ * vehicle's mpg naturally is: a car that's driven aggressively one week and
+ * gently the next has a wide spread on its own terms, so it needs a bigger
+ * raw mpg swing to count as unusual than a very consistent commuter car
+ * does, and a flat percentage can't tell those two cases apart. Outliers and
+ * fillups with no mpg are left untiered (null).
+ */
+function assignMpgTiers(series: FillupWithMpg[]): FillupWithMpg[] {
+  const cleanValues = series.filter((f) => f.mpg !== null && !f.mpgOutlier).map((f) => f.mpg as number);
+
+  if (cleanValues.length < MIN_SAMPLES_FOR_TIERS) return series;
+
+  const mean = cleanValues.reduce((a, b) => a + b, 0) / cleanValues.length;
+  const variance = cleanValues.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (cleanValues.length - 1);
+  const stddev = Math.sqrt(variance);
+  if (stddev === 0) return series;
+
+  const lowCutoff = mean - TIER_Z_SCORE * stddev;
+  const bestCutoff = mean + TIER_Z_SCORE * stddev;
+
+  return series.map((f) => {
+    if (f.mpg === null || f.mpgOutlier) return f;
+    const mpgTier: MpgTier = f.mpg >= bestCutoff ? 'best' : f.mpg <= lowCutoff ? 'low' : 'average';
+    return { ...f, mpgTier };
+  });
+}
+
 export interface LifetimeMpgStats {
   average: number | null;
-  median: number | null;
+  /** Mean of each fillup's mpg truncated to a whole number first, rather
+   *  than the mean of the precise decimal values (see `average`). */
+  meanWholeMpg: number | null;
   sampleCount: number;
   excludedOutliers: number;
 }
 
 /**
- * Lifetime average/median mpg for a vehicle, from its full fillup history.
+ * Lifetime average mpg for a vehicle, from its full fillup history.
  * Fillups flagged as mpg outliers (see `flagOutliers`) are excluded, since a
  * handful of un-flagged missed fillups can otherwise drag a simple average
  * up drastically (one 300mpg blip is enough to swing it by several mpg).
@@ -162,18 +203,90 @@ export function computeLifetimeMpgStats(fillups: Fillup[]): LifetimeMpgStats {
   const clean = series.filter((f) => !f.mpgOutlier).map((f) => f.mpg as number);
 
   if (!clean.length) {
-    return { average: null, median: null, sampleCount: 0, excludedOutliers: series.length };
+    return { average: null, meanWholeMpg: null, sampleCount: 0, excludedOutliers: series.length };
   }
 
-  const sorted = [...clean].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   const average = clean.reduce((a, b) => a + b, 0) / clean.length;
+  const wholeValues = clean.map((v) => Math.trunc(v));
+  const meanWholeMpg = wholeValues.reduce((a, b) => a + b, 0) / wholeValues.length;
 
   return {
     average: round2(average),
-    median: round2(median),
+    meanWholeMpg: round1(meanWholeMpg),
     sampleCount: clean.length,
     excludedOutliers: series.length - clean.length,
+  };
+}
+
+export interface LifetimeVehicleStats {
+  fillupCount: number;
+  avgMpg: number | null;
+  meanMpg: number | null;
+  bestMpg: number | null;
+  worstMpg: number | null;
+  totalCost: number | null;
+  totalGallons: number | null;
+  totalMiles: number | null;
+  costPerMile: number | null;
+  avgPricePerGallon: number | null;
+  avgDaysBetweenFillups: number | null;
+  excludedOutliers: number;
+}
+
+/**
+ * Average calendar days between consecutive fillups. Skips the gap ending at
+ * any fillup flagged `missedFillup` or `mpgOutlier`, since those intervals
+ * likely span more than one real-world fillup and would otherwise inflate
+ * the average (the same reasoning as excluding them from the mpg average).
+ */
+function computeAvgDaysBetweenFillups(fillups: Fillup[]): number | null {
+  const series = computeMpgSeries(fillups).sort(
+    (a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer,
+  );
+
+  const gapsDays: number[] = [];
+  for (let i = 1; i < series.length; i++) {
+    const curr = series[i];
+    if (curr.missedFillup || curr.mpgOutlier) continue;
+    const days = (new Date(curr.date).getTime() - new Date(series[i - 1].date).getTime()) / 86_400_000;
+    if (days > 0) gapsDays.push(days);
+  }
+
+  if (!gapsDays.length) return null;
+  return round1(gapsDays.reduce((a, b) => a + b, 0) / gapsDays.length);
+}
+
+/**
+ * A broader set of lifetime stats for a single vehicle: cost, gallons, miles
+ * driven, and the mpg extremes, alongside the average/mean from
+ * `computeLifetimeMpgStats`. Best/worst mpg exclude the same outliers that
+ * average/mean do, since an outlier is usually a data artifact (a missed
+ * fillup), not a real great or bad tank of gas.
+ */
+export function computeLifetimeVehicleStats(fillups: Fillup[]): LifetimeVehicleStats {
+  const mpgStats = computeLifetimeMpgStats(fillups);
+  const cleanMpgValues = computeMpgSeries(fillups)
+    .filter((f) => f.mpg !== null && !f.mpgOutlier)
+    .map((f) => f.mpg as number);
+
+  const totalCost = fillups.reduce((sum, f) => sum + (f.totalCost ?? 0), 0);
+  const totalGallons = fillups.reduce((sum, f) => sum + (f.gallons ?? 0), 0);
+
+  const odometers = fillups.map((f) => f.odometer);
+  const totalMiles = odometers.length >= 2 ? Math.max(...odometers) - Math.min(...odometers) : null;
+
+  return {
+    fillupCount: fillups.length,
+    avgMpg: mpgStats.average,
+    meanMpg: mpgStats.meanWholeMpg,
+    bestMpg: cleanMpgValues.length ? round2(Math.max(...cleanMpgValues)) : null,
+    worstMpg: cleanMpgValues.length ? round2(Math.min(...cleanMpgValues)) : null,
+    totalCost: fillups.length ? round2(totalCost) : null,
+    totalGallons: fillups.length ? round2(totalGallons) : null,
+    totalMiles,
+    costPerMile: totalMiles && totalMiles > 0 ? round3(totalCost / totalMiles) : null,
+    avgPricePerGallon: totalGallons > 0 ? round3(totalCost / totalGallons) : null,
+    avgDaysBetweenFillups: computeAvgDaysBetweenFillups(fillups),
+    excludedOutliers: mpgStats.excludedOutliers,
   };
 }

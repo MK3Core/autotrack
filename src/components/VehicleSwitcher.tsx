@@ -31,9 +31,6 @@ export default function VehicleSwitcher() {
             </button>
           ))}
       </div>
-      <Link to="/vehicles" className="vswitch__manage">
-        Manage
-      </Link>
     </header>
   );
 }

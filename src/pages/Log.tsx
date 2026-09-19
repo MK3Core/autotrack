@@ -5,7 +5,7 @@ import { useVehicles } from '../lib/VehicleContext';
 import { computeLifetimeMpgStats, computeMpgSeries } from '../lib/calc';
 import { useInfiniteScroll } from '../lib/useInfiniteScroll';
 import type { Fillup, FillupWithMpg } from '../types';
-import './Fillups.css';
+import './Log.css';
 
 const PAGE_SIZE = 20;
 
@@ -33,8 +33,8 @@ async function dismissOutlier(fillupId: string) {
   await db.fillups.put({ ...f, outlierAcknowledged: true });
 }
 
-export default function Fillups() {
-  const { selectedVehicleId, selectedVehicle } = useVehicles();
+export default function Log() {
+  const { vehicles, selectedVehicleId, selectedVehicle } = useVehicles();
   const fillups = useLiveQuery<Fillup[], Fillup[]>(
     () =>
       selectedVehicleId
@@ -71,12 +71,37 @@ export default function Fillups() {
     }
   }
 
+  if (!vehicles.length) {
+    return (
+      <div className="card">
+        <h2>Welcome to AutoTrack</h2>
+        <p>Add your first vehicle to start logging fillups.</p>
+        <Link to="/vehicles" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>
+          Add a Vehicle
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h2>Fillup Timeline{selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h2>
+      <h2>Log</h2>
       {timeline.length === 0 && <p>No fillups logged yet.</p>}
 
       <div className="timeline">
+        <div className="timeline__row">
+          <div className="timeline__dot timeline__dot--add" />
+          <Link to="/add" className="timeline__card timeline__card--add card">
+            <div className="timeline__card-top">
+              <strong>Add Fillup</strong>
+              <span className="timeline__add-icon">+</span>
+            </div>
+            <div className="timeline__card-meta">
+              <span>Log a new fillup for {selectedVehicle?.name ?? 'this vehicle'}</span>
+            </div>
+          </Link>
+        </div>
+
         {rows.map((row) => {
           if (row.type === 'month') {
             return (
@@ -100,7 +125,7 @@ export default function Fillups() {
                     <>
                       <span className="ghost-card__label">
                         {f.mpg} mpg here is way off this vehicle's typical{' '}
-                        {lifetimeStats.median ?? 'N/A'} mpg. Was a fillup missed before this one?
+                        {lifetimeStats.meanWholeMpg ?? 'N/A'} mpg. Was a fillup missed before this one?
                       </span>
                       <div className="ghost-card__actions">
                         <button className="btn-primary" onClick={() => confirmMissed(f.id)}>
@@ -129,7 +154,11 @@ export default function Fillups() {
                   {f.pricePerGallon !== undefined && <span>${f.pricePerGallon.toFixed(3)}/gal</span>}
                   {f.gallons !== undefined && <span>{f.gallons.toFixed(2)} gal</span>}
                   {f.totalCost !== undefined && <span>${f.totalCost.toFixed(2)}</span>}
-                  {f.mpg !== null && <span className="timeline__mpg">{f.mpg} mpg</span>}
+                  {f.mpg !== null && (
+                    <span className={`timeline__mpg timeline__mpg--${f.mpgTier ?? 'average'}`}>
+                      {f.mpg} mpg
+                    </span>
+                  )}
                   {!f.fullTank && <span className="badge">partial</span>}
                 </div>
               </Link>

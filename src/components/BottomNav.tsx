@@ -2,11 +2,10 @@ import { NavLink } from 'react-router-dom';
 import './BottomNav.css';
 
 const items = [
-  { to: '/', label: 'Home', icon: '⌂' },
-  { to: '/add', label: 'Add', icon: '+' },
-  { to: '/fillups', label: 'Log', icon: '☰' },
-  { to: '/reports', label: 'Reports', icon: '📈' },
-  { to: '/data', label: 'Data', icon: '⇅' },
+  { to: '/', label: 'Log', icon: '☰', end: true },
+  { to: '/reports', label: 'Reports', icon: '📈', end: false },
+  { to: '/vehicles', label: 'Vehicles', icon: '🚗', end: false },
+  { to: '/data', label: 'Data', icon: '⇅', end: false },
 ];
 
 export default function BottomNav() {
@@ -16,7 +15,7 @@ export default function BottomNav() {
         <NavLink
           key={item.to}
           to={item.to}
-          end={item.to === '/'}
+          end={item.end}
           className={({ isActive }) => `bottom-nav__item ${isActive ? 'is-active' : ''}`}
         >
           <span className="bottom-nav__icon">{item.icon}</span>

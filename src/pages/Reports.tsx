@@ -10,12 +10,20 @@ import {
 } from 'recharts';
 import { db } from '../db';
 import { useVehicles } from '../lib/VehicleContext';
-import { computeLifetimeMpgStats, computeMpgSeries } from '../lib/calc';
+import { computeLifetimeVehicleStats, computeMpgSeries } from '../lib/calc';
 import type { Fillup } from '../types';
 import './Reports.css';
 
+function formatDateTick(timestamp: number) {
+  return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+}
+
+function formatDateLabel(label: unknown) {
+  return new Date(Number(label)).toLocaleDateString();
+}
+
 export default function Reports() {
-  const { vehicles, selectedVehicleId, selectVehicle, selectedVehicle } = useVehicles();
+  const { selectedVehicleId, selectedVehicle } = useVehicles();
   const fillups = useLiveQuery<Fillup[], Fillup[]>(
     () =>
       selectedVehicleId
@@ -24,7 +32,6 @@ export default function Reports() {
     [selectedVehicleId],
     [],
   );
-  const allFillups = useLiveQuery<Fillup[], Fillup[]>(() => db.fillups.toArray(), [], []);
 
   const withMpg = computeMpgSeries(fillups).sort(
     (a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer,
@@ -32,77 +39,91 @@ export default function Reports() {
 
   const mpgData = withMpg
     .filter((f) => f.mpg !== null)
-    .map((f) => ({ date: f.date, mpg: f.mpg as number }));
+    .map((f) => ({ date: new Date(f.date).getTime(), mpg: f.mpg as number }));
 
   const priceData = withMpg
     .filter((f) => f.pricePerGallon !== undefined)
-    .map((f) => ({ date: f.date, price: f.pricePerGallon as number }));
+    .map((f) => ({ date: new Date(f.date).getTime(), price: f.pricePerGallon as number }));
 
-  const lifetimeStats = computeLifetimeMpgStats(fillups);
+  const odometerData = withMpg.map((f) => ({ date: new Date(f.date).getTime(), odometer: f.odometer }));
 
-  const comparison = vehicles
-    .map((v) => ({
-      vehicle: v,
-      stats: computeLifetimeMpgStats(allFillups.filter((f) => f.vehicleId === v.id)),
-    }))
-    .filter((c) => c.stats.sampleCount > 0)
-    .sort((a, b) => (b.stats.average ?? 0) - (a.stats.average ?? 0));
+  const stats = computeLifetimeVehicleStats(fillups);
 
   return (
     <div>
       <h2>Reports</h2>
-      <label className="reports__vehicle-select">
-        Vehicle
-        <select value={selectedVehicleId ?? ''} onChange={(e) => selectVehicle(e.target.value)}>
-          {vehicles.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
-          ))}
-        </select>
-      </label>
 
-      <div className="card reports__lifetime-card">
-        <div className="stat">
-          <span className="stat__value">
-            {lifetimeStats.average !== null ? lifetimeStats.average : 'N/A'}
-          </span>
-          <span className="stat__label">Lifetime Avg MPG{selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</span>
+      <div className="card reports__stats-card">
+        <h3>Lifetime Vehicle Stats{selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
+        <div className="reports__stats-grid">
+          <div className="stat">
+            <span className="stat__value">{stats.avgMpg ?? 'N/A'}</span>
+            <span className="stat__label">Avg MPG</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">{stats.meanMpg ?? 'N/A'}</span>
+            <span
+              className="stat__label"
+              title="Each fillup's mpg is truncated to a whole number before averaging"
+            >
+              Mean MPG
+            </span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">{stats.bestMpg ?? 'N/A'}</span>
+            <span className="stat__label">Best Tank</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">{stats.worstMpg ?? 'N/A'}</span>
+            <span className="stat__label">Worst Tank</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">{stats.totalCost !== null ? `$${stats.totalCost.toFixed(2)}` : 'N/A'}</span>
+            <span className="stat__label">Total Fuel Cost</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">
+              {stats.totalGallons !== null ? stats.totalGallons.toFixed(1) : 'N/A'}
+            </span>
+            <span className="stat__label">Total Gallons</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">
+              {stats.totalMiles !== null ? stats.totalMiles.toLocaleString() : 'N/A'}
+            </span>
+            <span className="stat__label">Miles Tracked</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">
+              {stats.costPerMile !== null ? `$${stats.costPerMile.toFixed(3)}` : 'N/A'}
+            </span>
+            <span className="stat__label">Cost / Mile</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">
+              {stats.avgPricePerGallon !== null ? `$${stats.avgPricePerGallon.toFixed(3)}` : 'N/A'}
+            </span>
+            <span className="stat__label">Avg Price / Gallon</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">{stats.fillupCount}</span>
+            <span className="stat__label">Fillups Logged</span>
+          </div>
+          <div className="stat">
+            <span className="stat__value">
+              {stats.avgDaysBetweenFillups !== null ? stats.avgDaysBetweenFillups : 'N/A'}
+            </span>
+            <span className="stat__label">Avg Days Between Fillups</span>
+          </div>
         </div>
-        <div className="stat">
-          <span className="stat__value">{lifetimeStats.median !== null ? lifetimeStats.median : 'N/A'}</span>
-          <span className="stat__label">Lifetime Median MPG</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">{lifetimeStats.sampleCount}</span>
-          <span className="stat__label">Fillups Counted</span>
-        </div>
+        {stats.excludedOutliers > 0 && (
+          <p className="reports__outlier-note">
+            {stats.excludedOutliers} fillup{stats.excludedOutliers === 1 ? '' : 's'} excluded from the mpg
+            figures above as outliers (see the "check mileage" flags in the Log). These are likely missed
+            fillups that were never marked.
+          </p>
+        )}
       </div>
-      {lifetimeStats.excludedOutliers > 0 && (
-        <p className="reports__outlier-note">
-          {lifetimeStats.excludedOutliers} fillup{lifetimeStats.excludedOutliers === 1 ? '' : 's'} excluded
-          from these figures as mpg outliers (see the "check mileage" flags in the Log). These are likely
-          missed fillups that were never marked.
-        </p>
-      )}
-
-      {comparison.length > 1 && (
-        <div className="card reports__compare-card">
-          <h3>Lifetime MPG by Vehicle</h3>
-          <ul className="reports__compare-list">
-            {comparison.map(({ vehicle, stats }) => (
-              <li
-                key={vehicle.id}
-                className={vehicle.id === selectedVehicleId ? 'is-selected' : ''}
-                onClick={() => selectVehicle(vehicle.id)}
-              >
-                <span>{vehicle.name}</span>
-                <span className="reports__compare-value">{stats.average} mpg</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
 
       <div className="card reports__chart-card">
         <h3>Fuel Efficiency Over Time (mpg){selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
@@ -112,9 +133,19 @@ export default function Reports() {
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={mpgData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3a" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9aa1b0' }} />
+              <XAxis
+                dataKey="date"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tick={{ fontSize: 11, fill: '#9aa1b0' }}
+                tickFormatter={formatDateTick}
+              />
               <YAxis tick={{ fontSize: 11, fill: '#9aa1b0' }} domain={['auto', 'auto']} />
-              <Tooltip contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }} />
+              <Tooltip
+                contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }}
+                labelFormatter={formatDateLabel}
+              />
               <Line type="monotone" dataKey="mpg" stroke="#4f8cff" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -129,10 +160,52 @@ export default function Reports() {
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={priceData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3a" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9aa1b0' }} />
+              <XAxis
+                dataKey="date"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tick={{ fontSize: 11, fill: '#9aa1b0' }}
+                tickFormatter={formatDateTick}
+              />
               <YAxis tick={{ fontSize: 11, fill: '#9aa1b0' }} domain={['auto', 'auto']} />
-              <Tooltip contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }} />
+              <Tooltip
+                contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }}
+                labelFormatter={formatDateLabel}
+              />
               <Line type="monotone" dataKey="price" stroke="#4caf7d" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      <div className="card reports__chart-card">
+        <h3>Odometer Over Time{selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
+        {odometerData.length < 2 ? (
+          <p className="reports__empty">Not enough fillup data yet to chart mileage.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={odometerData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a2f3a" />
+              <XAxis
+                dataKey="date"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tick={{ fontSize: 11, fill: '#9aa1b0' }}
+                tickFormatter={formatDateTick}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#9aa1b0' }}
+                domain={['auto', 'auto']}
+                tickFormatter={(v: number) => v.toLocaleString()}
+              />
+              <Tooltip
+                contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }}
+                labelFormatter={formatDateLabel}
+                formatter={(v) => Number(v).toLocaleString()}
+              />
+              <Line type="monotone" dataKey="odometer" stroke="#9085e9" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}

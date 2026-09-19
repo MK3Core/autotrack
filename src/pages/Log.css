@@ -62,8 +62,43 @@
 }
 
 .timeline__mpg {
-  color: var(--good);
   font-weight: 600;
+}
+
+.timeline__mpg--average {
+  color: var(--accent);
+}
+
+.timeline__mpg--best {
+  color: var(--good);
+}
+
+.timeline__mpg--low {
+  color: var(--danger);
+}
+
+.timeline__dot--add {
+  width: 13px;
+  height: 13px;
+  left: -1.52rem;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-dim);
+}
+
+.timeline__card--add {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.timeline__card--add .timeline__card-meta {
+  color: var(--text);
+}
+
+.timeline__add-icon {
+  color: var(--accent);
+  font-size: 1.3rem;
+  line-height: 1;
+  font-weight: 700;
 }
 
 .timeline__row--ghost {

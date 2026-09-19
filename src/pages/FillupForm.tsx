@@ -133,21 +133,21 @@ export default function FillupForm() {
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     };
     await db.fillups.put(fillup);
-    navigate('/fillups');
+    navigate('/');
   }
 
   async function handleDelete() {
     if (!existing) return;
     if (!confirm('Delete this fillup?')) return;
     await db.fillups.delete(existing.id);
-    navigate('/fillups');
+    navigate('/');
   }
 
   const filledCount = TRIANGLE_FIELDS.filter((f) => values[f] !== undefined).length;
 
   return (
     <div>
-      <BackButton fallback={existing ? '/fillups' : '/'} />
+      <BackButton fallback="/" />
       <h2>{existing ? 'Edit Fillup' : 'Add Fillup'}</h2>
       <form className="fillup-form card" onSubmit={handleSubmit}>
         <label>

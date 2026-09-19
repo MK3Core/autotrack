@@ -59,9 +59,15 @@ export const GAS_TYPE_PRESETS = [
 /** One of these three fillup fields, computed from the other two. */
 export type FillupCalcField = 'pricePerGallon' | 'totalCost' | 'gallons';
 
+/** Where a fillup's mpg falls relative to this vehicle's own history. */
+export type MpgTier = 'low' | 'average' | 'best';
+
 export interface FillupWithMpg extends Fillup {
   mpg: number | null;
   /** true when `mpg` is a statistical outlier vs. this vehicle's other fillups
    *  (a common symptom of an un-flagged missed fillup) */
   mpgOutlier: boolean;
+  /** null when mpg is null, the fillup is an outlier, or there isn't enough
+   *  history yet to rank this vehicle's fillups */
+  mpgTier: MpgTier | null;
 }

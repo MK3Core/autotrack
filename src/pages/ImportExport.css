@@ -11,6 +11,29 @@
   color: var(--danger);
 }
 
+.data-section__compat-intro {
+  margin: 0.5rem 0 0.3rem 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.data-section__compat-list {
+  list-style: none;
+  margin: 0 0 0.75rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.data-section__compat-list li::before {
+  content: '✓';
+  color: var(--good);
+  margin-right: 0.5rem;
+}
+
 .data-section__summary {
   margin-top: 0.5rem;
   padding-left: 1.2rem;
@@ -20,4 +43,26 @@
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+}
+
+.data-section__vehicle-list {
+  list-style: none;
+  margin: 0.5rem 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.data-section__vehicle-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-section__vehicle-list li:last-child {
+  border-bottom: none;
 }

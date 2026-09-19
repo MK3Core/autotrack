@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
-import { exportFillupsCSV, exportVehiclesCSV, importFile, type ImportSummary } from '../lib/importExport';
+import { exportVehicleCsv, importFile, type ImportSummary } from '../lib/importExport';
+import { useVehicles } from '../lib/VehicleContext';
 import './ImportExport.css';
 
 export default function ImportExport() {
+  const { vehicles } = useVehicles();
   const fileInput = useRef<HTMLInputElement>(null);
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +18,20 @@ export default function ImportExport() {
     setSummary(null);
     try {
       const result = await importFile(file);
-      setSummary(result);
+      if (
+        result.vehiclesAdded === 0 &&
+        result.vehiclesUpdated === 0 &&
+        result.fillupsAdded === 0 &&
+        result.maintenanceAdded === 0
+      ) {
+        setError(
+          result.skippedRows > 0
+            ? `Nothing was imported. Found ${result.skippedRows} row${result.skippedRows === 1 ? '' : 's'} of data, but none matched a supported format (missing odometer or vehicle name). Double-check this file is a CSV/XLSX export from one of the apps above.`
+            : "Nothing was imported. This file doesn't look like a supported format: no recognizable data rows were found in it.",
+        );
+      } else {
+        setSummary(result);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed.');
     } finally {
@@ -31,10 +46,15 @@ export default function ImportExport() {
 
       <div className="card data-section">
         <h3>Import</h3>
+        <p className="data-section__compat-intro">Importer supports the following backup file types from apps:</p>
+        <ul className="data-section__compat-list">
+          <li>AutoTrack (.csv)</li>
+          <li>Drivvo (.xlsx)</li>
+          <li>Fuelio (.csv)</li>
+        </ul>
         <p>
-          Import a CSV or an Excel export (.xlsx), including a Drivvo export. Its Vehicles, Refueling, and
-          Services sheets are all recognized automatically. Vehicles are matched by name; new ones are created
-          as needed. Nothing is deleted or overwritten by an import.
+          Vehicle details and fillups are recognized automatically from any of the above. Vehicles are
+          matched by name; new ones are created as needed. Nothing is deleted or overwritten by an import.
         </p>
         <input ref={fileInput} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} disabled={busy} />
         {busy && <p>Importing…</p>}
@@ -52,13 +72,21 @@ export default function ImportExport() {
 
       <div className="card data-section">
         <h3>Export</h3>
-        <p>Download your data as CSV, ready to open in Excel/Sheets or re-import elsewhere.</p>
-        <div className="data-section__buttons">
-          <button className="btn-primary" onClick={() => exportFillupsCSV()}>
-            Export Fillups CSV
-          </button>
-          <button onClick={() => exportVehiclesCSV()}>Export Vehicles CSV</button>
-        </div>
+        <p>
+          One .csv file per vehicle: its details on the first lines, then its full fillup history below.
+          Opens fine in Excel/Sheets, and can be dropped back into Import above to restore it.
+        </p>
+        {vehicles.length === 0 && <p>No vehicles yet.</p>}
+        <ul className="data-section__vehicle-list">
+          {vehicles.map((v) => (
+            <li key={v.id}>
+              <span>{v.name}</span>
+              <button className="btn-primary" onClick={() => exportVehicleCsv(v.id)}>
+                Export .csv
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
