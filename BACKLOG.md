@@ -35,3 +35,24 @@ The fillup form's numeric fields (notably Total Cost, which uses
 `type="text" inputMode="decimal"` to get proper currency formatting) should
 be checked on a real phone to confirm the numeric keypad appears as
 expected rather than the full keyboard. Not verified yet.
+
+## Selectable themes
+
+The app is always dark today (`src/index.css` defines one set of color
+variables on `:root`, and `src/main.tsx` hard-codes light status bar icons
+for it). The default dark look stays, but a theme picker should offer more:
+
+- **Light mode.** A straightforward light palette. Needs the native side to
+  follow along: status/nav bar colors (`capacitor.config.ts`) and the
+  status bar icon style call in `src/main.tsx` are both currently fixed for
+  dark. Recharts colors in `src/pages/Reports.tsx` are also picked with a
+  dark background in mind.
+- **Glovebox notebook.** A hand-written, paper-notebook look, like an old
+  guy keeping a written log in the glovebox: ruled or lined paper
+  background, handwriting-style font, ink-on-paper colors, maybe
+  pen-underline touches. Purely a visual skin over the same screens.
+
+Most of the app already reads colors from CSS variables, so a theme is
+mostly a swapped variable set. A few colors are hard-coded (for example the
+`#3f78e0` hover in `.btn-primary`) and would need to move to variables first.
+The choice should persist across launches (localStorage is fine).
