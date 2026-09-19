@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the web app's dark palette (src/index.css). -->
+    <color name="colorPrimary">#171a21</color>
+    <color name="colorPrimaryDark">#0f1115</color>
+    <color name="colorAccent">#4f8cff</color>
+    <!-- Matches the "surface" color: the app's own top/bottom bars that
+         sit directly against the system status/nav bars. -->
+    <color name="statusBarBackground">#171a21</color>
+    <color name="navigationBarBackground">#171a21</color>
+</resources>
