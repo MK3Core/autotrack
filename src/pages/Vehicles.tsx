@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
+import VehicleServices from '../components/VehicleServices';
 import { useVehicles } from '../lib/VehicleContext';
+import { deleteVehicleMaintenance } from '../lib/maintenance';
 import type { Vehicle } from '../types';
 import './Vehicles.css';
 
@@ -73,8 +75,10 @@ export default function Vehicles() {
 
   async function handleDelete(v: Vehicle) {
     const count = await db.fillups.where('vehicleId').equals(v.id).count();
-    if (!confirm(`Delete "${v.name}"? This will also delete ${count} logged fillup(s).`)) return;
+    const serviceCount = await db.maintenance.where('vehicleId').equals(v.id).count();
+    if (!confirm(`Delete "${v.name}"? This will also delete ${count} logged fillup(s) and ${serviceCount} service record(s).`)) return;
     await db.fillups.where('vehicleId').equals(v.id).delete();
+    await deleteVehicleMaintenance(v.id);
     await db.vehicles.delete(v.id);
   }
 
@@ -98,6 +102,7 @@ export default function Vehicles() {
                 Delete
               </button>
             </div>
+            <VehicleServices vehicleId={v.id} />
           </li>
         ))}
       </ul>

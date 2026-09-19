@@ -47,6 +47,42 @@ export interface MaintenanceRaw {
   createdAt: string;
 }
 
+/** One line item within a maintenance record, e.g. "Oil Change". */
+export interface ServiceItem {
+  name: string;
+  /** This service's own cost, when the shop itemized it. */
+  cost?: number;
+}
+
+/** A single shop visit: one odometer reading and date, one or more services. */
+export interface MaintenanceRecord {
+  id: string;
+  vehicleId: string;
+  date: string; // ISO yyyy-mm-dd
+  odometer: number;
+  location?: string;
+  /** What was actually paid for the whole visit; may exceed the itemized costs. */
+  totalCost?: number;
+  services: ServiceItem[];
+  notes?: string;
+  createdAt: string;
+}
+
+/**
+ * A service that repeats (e.g. oil change every 5,000 mi or 12 months,
+ * whichever comes first). Only the interval is stored: when it was last done
+ * is always derived from the vehicle's newest matching record, so editing or
+ * deleting records can never leave the schedule out of sync.
+ */
+export interface ServiceSchedule {
+  id: string;
+  vehicleId: string;
+  serviceName: string;
+  intervalMiles?: number;
+  intervalMonths?: number;
+  createdAt: string;
+}
+
 export const GAS_TYPE_PRESETS = [
   'Regular (87)',
   'Mid-Grade (89)',

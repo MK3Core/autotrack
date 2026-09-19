@@ -1,4 +1,4 @@
-See [BACKLOG.md](./BACKLOG.md) for planned/deferred future work (backend + sync, maintenance records, app packaging).
+See [BACKLOG.md](./BACKLOG.md) for planned/deferred future work (backend + sync, iOS packaging).
 
 # React + TypeScript + Vite
 

@@ -92,8 +92,8 @@ export default function ClearDataDialog({ vehicleCount, fillupCount, onCancel, o
         <h3 id="clear-dialog-title">Clear all data?</h3>
         <p>
           This permanently deletes <strong>{vehicleCount}</strong> vehicle{vehicleCount === 1 ? '' : 's'} and{' '}
-          <strong>{fillupCount}</strong> fillup{fillupCount === 1 ? '' : 's'}, along with any imported
-          maintenance records. It can&apos;t be undone.
+          <strong>{fillupCount}</strong> fillup{fillupCount === 1 ? '' : 's'}, along with all service
+          records and repeating services. It can&apos;t be undone.
         </p>
 
         <button

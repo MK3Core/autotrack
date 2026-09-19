@@ -173,3 +173,142 @@
   font-size: 0.85rem;
   padding: 1rem 0;
 }
+
+.timeline__dot--reminder {
+  background: var(--warn);
+}
+
+.timeline__card--reminder {
+  border-color: var(--warn);
+}
+
+.timeline__reminder-badge {
+  color: var(--warn);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.timeline__kind {
+  margin-right: 0.4rem;
+}
+
+.timeline__dot--service {
+  background: var(--service);
+}
+
+.timeline__card--service {
+  border-left: 3px solid var(--service);
+}
+
+.timeline__service-tag {
+  color: var(--service);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.entry-toggle {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+}
+
+/* The two options fan out from the New Entry card and roll back up into it.
+   The wrapper animates its height (0fr <-> 1fr) so everything below eases
+   down/up with it; each row also fades and slides, staggered so the cards
+   peel off one after another (top first opening, bottom first closing). */
+.entry-fan {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: entry-fan-open 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.entry-fan.is-closing {
+  animation: entry-fan-close 380ms cubic-bezier(0.55, 0, 0.7, 0.2) forwards;
+}
+
+/* overflow must clip for the height animation, so the dots (which sit left of
+   the rows) are kept inside the clip box with matching negative margin/padding. */
+.entry-fan__inner {
+  overflow: hidden;
+  min-height: 0;
+  margin-left: -1.6rem;
+  padding-left: 1.6rem;
+}
+
+.entry-fan__row {
+  animation: entry-row-in 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.entry-fan__row--first {
+  animation-delay: 0ms;
+}
+
+.entry-fan__row--second {
+  animation-delay: 110ms;
+}
+
+.entry-fan.is-closing .entry-fan__row {
+  animation: entry-row-out 300ms cubic-bezier(0.55, 0, 0.7, 0.2) forwards;
+}
+
+.entry-fan.is-closing .entry-fan__row--second {
+  animation-delay: 0ms;
+}
+
+.entry-fan.is-closing .entry-fan__row--first {
+  animation-delay: 90ms;
+}
+
+@keyframes entry-fan-open {
+  from {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes entry-fan-close {
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes entry-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.97);
+  }
+}
+
+@keyframes entry-row-out {
+  to {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.97);
+  }
+}
+
+.timeline__add-icon--service {
+  color: var(--service);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-fan,
+  .entry-fan__row {
+    animation: none !important;
+  }
+}
+
+.timeline__reminder-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.timeline__reminder-icon {
+  width: 1.7rem;
+  height: 1.3rem;
+  flex-shrink: 0;
+  color: var(--warn);
+}

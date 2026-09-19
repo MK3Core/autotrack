@@ -21,16 +21,6 @@ than being a natural next increment.
 
 Not a current priority, but the direction to build toward eventually.
 
-## Maintenance / service records
-
-Drivvo's Services/Expenses sheets and Fuelio's "## Costs" section are
-already parsed on import and stashed as-is in the `maintenanceRaw` table
-(`src/types/index.ts`, `src/lib/importExport.ts`), so nothing is lost when
-importing from either app. There's no UI for this data yet: no maintenance
-log, no entry form, no reports. Building that out (oil changes, repairs,
-registration, etc., alongside fillups) is the natural next feature after the
-backend question above.
-
 ## iOS app packaging
 
 Android is done: Capacitor builds a signed release APK via GitHub Actions

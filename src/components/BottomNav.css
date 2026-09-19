@@ -19,7 +19,25 @@
 }
 
 .bottom-nav__icon {
+  /* Fixed box so every label lands on the same baseline no matter how tall
+     its emoji glyph happens to render. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.5rem;
   font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* The pump's body sits left of its glyph's center (the hose hangs off the
+   right), so it reads as off-center above its label; shift it back. */
+.bottom-nav__icon--pump {
+  transform: translateX(0.15rem);
+}
+
+/* Some emoji (the car) draw small inside their em box; scale them to match. */
+.bottom-nav__icon--boost {
+  font-size: 1.4rem;
 }
 
 .bottom-nav__item.is-active {

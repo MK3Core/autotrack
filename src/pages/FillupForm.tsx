@@ -141,7 +141,6 @@ export default function FillupForm() {
 
   async function handleDelete() {
     if (!existing) return;
-    if (!confirm('Delete this fillup?')) return;
     await db.fillups.delete(existing.id);
     navigate('/');
   }

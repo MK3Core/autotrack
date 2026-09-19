@@ -28,7 +28,8 @@ export default function ImportExport() {
         result.vehiclesAdded === 0 &&
         result.vehiclesUpdated === 0 &&
         result.fillupsAdded === 0 &&
-        result.maintenanceAdded === 0
+        result.maintenanceAdded === 0 &&
+        result.schedulesAdded === 0
       ) {
         setError(
           result.skippedRows > 0
@@ -59,7 +60,7 @@ export default function ImportExport() {
           <li>Fuelio (.csv)</li>
         </ul>
         <p>
-          Vehicle details and fillups are recognized automatically from any of the above. Vehicles are
+          Vehicle details, fillups and services are recognized automatically from any of the above. Vehicles are
           matched by name; new ones are created as needed. Nothing is deleted or overwritten by an import.
         </p>
         <input ref={fileInput} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} disabled={busy} />
@@ -70,7 +71,8 @@ export default function ImportExport() {
             <li>Vehicles added: {summary.vehiclesAdded}</li>
             <li>Vehicles updated: {summary.vehiclesUpdated}</li>
             <li>Fillups added: {summary.fillupsAdded}</li>
-            <li>Maintenance records stashed for later: {summary.maintenanceAdded}</li>
+            <li>Service records added: {summary.maintenanceAdded}</li>
+            {summary.schedulesAdded > 0 && <li>Repeating services added: {summary.schedulesAdded}</li>}
             {summary.skippedRows > 0 && <li>Rows skipped (missing odometer/name): {summary.skippedRows}</li>}
           </ul>
         )}
@@ -79,7 +81,7 @@ export default function ImportExport() {
       <div className="card data-section">
         <h3>Export</h3>
         <p>
-          One .csv file per vehicle: its details on the first lines, then its full fillup history below.
+          One .csv file per vehicle: its details on the first lines, then its full fillup and service history (including repeating services) below.
           Opens fine in Excel/Sheets, and can be dropped back into Import above to restore it.
         </p>
         {vehicles.length === 0 && <p>No vehicles yet.</p>}
@@ -98,7 +100,7 @@ export default function ImportExport() {
       <div className="card data-section data-section--danger">
         <h3>Clear data</h3>
         <p>
-          Permanently deletes all vehicles and fillups so you can start fresh. Export anything you want
+          Permanently deletes all vehicles, fillups and service records so you can start fresh. Export anything you want
           to keep first.
         </p>
         <button

@@ -1,0 +1,95 @@
+.vehicle-services {
+  flex-basis: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.vehicle-services h4 {
+  margin: 0 0 0.4rem 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.vehicle-services__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.vehicle-services__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vehicle-services__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.vehicle-services__item.is-due {
+  border-color: var(--warn);
+}
+
+.vehicle-services__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.vehicle-services__meta {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.vehicle-services__due {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.vehicle-services__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.vehicle-services__log {
+  text-align: center;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.vehicle-services__actions .btn-danger {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.vehicle-services__due {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.vehicle-services__icon {
+  width: 1.4rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+}
