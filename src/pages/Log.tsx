@@ -333,7 +333,6 @@ export default function Log() {
                   <span className="timeline__card-date">{f.date}</span>
                 </div>
                 <div className="timeline__card-meta">
-                  <span>{f.gasType}</span>
                   {f.pricePerGallon !== undefined && <span>${f.pricePerGallon.toFixed(3)}/gal</span>}
                   {f.gallons !== undefined && <span>{f.gallons.toFixed(2)} gal</span>}
                   {f.totalCost !== undefined && <span>${f.totalCost.toFixed(2)}</span>}
