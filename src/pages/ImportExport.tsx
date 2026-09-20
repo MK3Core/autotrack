@@ -47,6 +47,15 @@ export default function ImportExport() {
     }
   }
 
+  async function handleExport(vehicleId: string) {
+    setError(null);
+    try {
+      await exportVehicleCsv(vehicleId);
+    } catch (err) {
+      setError(err instanceof Error ? `Export failed: ${err.message}` : 'Export failed.');
+    }
+  }
+
   return (
     <div>
       <h2>Import / Export</h2>
@@ -89,7 +98,7 @@ export default function ImportExport() {
           {vehicles.map((v) => (
             <li key={v.id}>
               <span>{v.name}</span>
-              <button className="btn-primary" onClick={() => exportVehicleCsv(v.id)}>
+              <button className="btn-primary" onClick={() => handleExport(v.id)}>
                 Export .csv
               </button>
             </li>

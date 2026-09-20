@@ -1,4 +1,7 @@
 import * as XLSX from 'xlsx';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import type { Vehicle, Fillup, MaintenanceRecord, ServiceItem, ServiceSchedule } from '../types';
@@ -672,8 +675,32 @@ export async function buildVehicleCsv(vehicleId: string): Promise<{ text: string
   return { text, vehicleName: vehicle.name };
 }
 
+/**
+ * The Android/iOS WebView ignores `<a download>` blob links, so on a device we
+ * write the file to the app cache and hand it to the system share sheet
+ * (save to Files/Drive, email, etc.). The browser build still downloads directly.
+ */
+async function saveFile(filename: string, text: string) {
+  if (!Capacitor.isNativePlatform()) {
+    downloadBlob(filename, text, 'text/csv');
+    return;
+  }
+  const { uri } = await Filesystem.writeFile({
+    path: filename,
+    data: text,
+    directory: Directory.Cache,
+    encoding: Encoding.UTF8,
+  });
+  try {
+    await Share.share({ title: filename, dialogTitle: 'Export vehicle data', url: uri });
+  } catch (err) {
+    // Dismissing the share sheet rejects on some platforms; that isn't an error.
+    if (!/cancel/i.test(err instanceof Error ? err.message : String(err))) throw err;
+  }
+}
+
 export async function exportVehicleCsv(vehicleId: string) {
   const { text, vehicleName } = await buildVehicleCsv(vehicleId);
   const safeName = vehicleName.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'vehicle';
-  downloadBlob(`autotrack-${safeName}-${toDateString(new Date())}.csv`, text, 'text/csv');
+  await saveFile(`autotrack-${safeName}-${toDateString(new Date())}.csv`, text);
 }
