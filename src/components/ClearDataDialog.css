@@ -14,6 +14,17 @@
   max-width: 24rem;
   text-align: center;
   border-color: var(--danger);
+  /* A long-press anywhere in the dialog can start a text selection on Android
+     and iOS (often on the paragraph next to the button), so opt the whole
+     dialog out rather than just the button. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clear-dialog *::selection {
+  background: transparent;
 }
 
 .clear-dialog__icon {
@@ -42,10 +53,7 @@
   background: transparent;
   color: var(--text);
   font-weight: 600;
-  /* Stop Android's long-press from selecting text or scrolling mid-hold. */
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
+  /* Stop the long-press from scrolling mid-hold. */
   touch-action: none;
 }
 

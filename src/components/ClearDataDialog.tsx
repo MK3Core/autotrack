@@ -56,6 +56,7 @@ export default function ClearDataDialog({ vehicleCount, fillupCount, onCancel, o
   const start = useCallback(() => {
     if (done.current || holding.current) return;
     holding.current = true;
+    window.getSelection()?.removeAllRanges();
     kick();
   }, [kick]);
 
