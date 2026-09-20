@@ -317,9 +317,36 @@ function detectFuelioCsv(wb: XLSX.WorkBook): DetectedSource | null {
   return { vehicleRow: vehicleRows[0], fillupRows, maintenanceRows };
 }
 
+/**
+ * xlsx (zip) and xls (OLE) are binary and SheetJS reads them as-is. A CSV has
+ * no encoding marker, and handing SheetJS its raw bytes makes it guess Latin-1,
+ * which mangles curly quotes, accents and degree signs, so decode it ourselves.
+ */
+function readWorkbook(buf: ArrayBuffer): XLSX.WorkBook {
+  const bytes = new Uint8Array(buf);
+  const isZip = bytes[0] === 0x50 && bytes[1] === 0x4b;
+  const isOle = bytes[0] === 0xd0 && bytes[1] === 0xcf;
+  if (isZip || isOle) return XLSX.read(bytes, { type: 'array', cellDates: true });
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    // Not valid UTF-8: an older Windows export, most likely.
+    text = new TextDecoder('windows-1252').decode(bytes);
+  }
+  return XLSX.read(text, { type: 'string', cellDates: true });
+}
+
+/** Strictly increasing timestamps, so records created by one import keep their file order. */
+function createdAtStamper(): () => string {
+  let last = Date.now();
+  return () => new Date(++last).toISOString();
+}
+
 export async function importFile(file: File): Promise<ImportSummary> {
   const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+  const wb = readWorkbook(buf);
+  const stamp = createdAtStamper();
 
   const summary: ImportSummary = {
     vehiclesAdded: 0,
@@ -547,7 +574,7 @@ export async function importFile(file: File): Promise<ImportSummary> {
       totalCost: toNumber(pick(nrow, SERVICE_ROW_ALIASES.totalCost)),
       services: [service],
       notes: (pick(nrow, SERVICE_ROW_ALIASES.notes) as string) ?? undefined,
-      createdAt: new Date().toISOString(),
+      createdAt: stamp(),
     });
   }
   newMaintenance.push(...visits.values());
@@ -577,7 +604,7 @@ export async function importFile(file: File): Promise<ImportSummary> {
         serviceName: name,
         intervalMiles: intervalMiles || undefined,
         intervalMonths: intervalMonths || undefined,
-        createdAt: current?.createdAt ?? new Date().toISOString(),
+        createdAt: current?.createdAt ?? stamp(),
       };
       await db.schedules.put(schedule);
       byName.set(serviceKey(name), schedule);
@@ -628,7 +655,7 @@ export async function buildVehicleCsv(vehicleId: string): Promise<{ text: string
   ];
 
   const fillupRows = fillups
-    .sort((a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer || (a.time ?? '').localeCompare(b.time ?? ''))
     .map((f) => ({
       Date: f.date,
       Time: f.time ?? '',
@@ -645,8 +672,10 @@ export async function buildVehicleCsv(vehicleId: string): Promise<{ text: string
 
   // One row per service; a visit's shared fields repeat on each of its rows
   // and are tied together by "Record ID" on import.
+  // Visits on the same date and odometer fall back to creation order, so
+  // exporting the same data always produces the same file.
   const serviceRows = records
-    .sort((a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer || a.createdAt.localeCompare(b.createdAt))
     .flatMap((r, idx) =>
       r.services.map((svc) => ({
         'Record ID': idx + 1,
@@ -660,11 +689,13 @@ export async function buildVehicleCsv(vehicleId: string): Promise<{ text: string
       })),
     );
 
-  const recurringRows = schedules.map((sc) => ({
-    'Recurring Service': sc.serviceName,
-    'Every (mi)': sc.intervalMiles ?? '',
-    'Every (months)': sc.intervalMonths ?? '',
-  }));
+  const recurringRows = schedules
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.serviceName.localeCompare(b.serviceName))
+    .map((sc) => ({
+      'Recurring Service': sc.serviceName,
+      'Every (mi)': sc.intervalMiles ?? '',
+      'Every (months)': sc.intervalMonths ?? '',
+    }));
 
   const toCsv = (rows: object[]) => XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(rows)).trimEnd();
   const blocks = [toCsv(vehicleRows), toCsv(fillupRows)];
