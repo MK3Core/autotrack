@@ -225,6 +225,24 @@ The fillup form's numeric fields (notably Total Cost, which uses
 be checked on a real phone to confirm the numeric keypad appears as
 expected rather than the full keyboard. Not verified yet.
 
+## Save-to-folder export (file picker)
+
+CSV export currently hands the file to Android's share sheet (see `saveFile`
+in `src/lib/importExport.ts`, using `@capacitor/filesystem` and
+`@capacitor/share`). That works, but "save to the device" only appears if an
+installed app registers for it, such as Google Drive. On a phone without
+Google services (GrapheneOS, for example) the only options are messaging and
+email apps, so the workaround is sharing the file to yourself.
+
+The fix is Android's Storage Access Framework: an `ACTION_CREATE_DOCUMENT`
+intent shows the system "choose where to save" screen, and the user picks
+Downloads or any folder. It needs no storage permission and doesn't depend on
+which apps are installed. There's no well-maintained official Capacitor plugin
+for it, so this likely means a small custom native plugin in `MainActivity` or
+a vetted community package. Worth doing if the share sheet turns out to be
+annoying in practice; it would also serve the encrypted backup file idea under
+"Backend + sync service".
+
 ## Selectable themes
 
 The app is always dark today (`src/index.css` defines one set of color
