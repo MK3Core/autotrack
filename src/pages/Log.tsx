@@ -14,6 +14,16 @@ const PAGE_SIZE = 20;
 /** Must cover the longest closing animation in Log.css (plus its stagger). */
 const ENTRY_CLOSE_MS = 480;
 
+// Longest service list shown on a card before collapsing it, so the card
+// stays on one line. Full details live on the service's own page.
+const SERVICE_SUMMARY_MAX_CHARS = 24;
+
+function serviceSummary(names: string[]) {
+  const joined = names.join(', ');
+  if (joined.length <= SERVICE_SUMMARY_MAX_CHARS) return joined;
+  return names.length > 1 ? 'Multiple Services' : joined;
+}
+
 function monthLabel(dateStr: string) {
   const [y, m] = dateStr.split('-');
   if (!y || !m) return dateStr;
@@ -309,8 +319,7 @@ export default function Log() {
                   </div>
                   <div className="timeline__card-meta">
                     <span className="timeline__service-tag">Service</span>
-                    <span>{r.services.map((svc) => svc.name).join(', ')}</span>
-                    {r.location && <span>{r.location}</span>}
+                    <span className="timeline__service-names">{serviceSummary(r.services.map((svc) => svc.name))}</span>
                     {r.totalCost !== undefined && <span>${r.totalCost.toFixed(2)}</span>}
                   </div>
                 </Link>

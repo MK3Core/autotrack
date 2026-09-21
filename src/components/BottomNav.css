@@ -16,6 +16,11 @@
   color: var(--text-dim);
   text-decoration: none;
   font-size: 0.75rem;
+  transition: opacity 90ms ease-out;
+}
+
+.bottom-nav__item:active {
+  opacity: 0.55;
 }
 
 .bottom-nav__icon {

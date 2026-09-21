@@ -125,17 +125,14 @@
   gap: 0.6rem;
 }
 
-.ghost-card:hover {
-  opacity: 1;
-}
-
 .ghost-card--static {
   cursor: default;
-  user-select: none;
 }
 
-.ghost-card--static:hover {
-  opacity: 0.75;
+@media (hover: hover) {
+  .ghost-card:not(.ghost-card--static):hover {
+    opacity: 1;
+  }
 }
 
 .ghost-card__label {
@@ -201,6 +198,14 @@
 
 .timeline__card--service {
   border-left: 3px solid var(--service);
+}
+
+.timeline__service-names {
+  /* A single very long service name truncates instead of wrapping. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .timeline__service-tag {
