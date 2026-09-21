@@ -179,6 +179,75 @@ carefully.
   lost phone and backup leakage. It does not protect against a rooted device
   while the vault is unlocked.
 
+## Attach receipts to service records
+
+Let the user attach one or more photos (or documents) to a service record, so
+the receipts live next to the work they prove. The payoff is being able to
+reproduce a car's whole service history, receipts included, when selling it.
+
+The open question is where the files live. Options to weigh:
+
+- **App-private files.** Save images with `@capacitor/filesystem` in the
+  app's private directory and keep only the file names on the record. This
+  keeps IndexedDB small and is the natural fit on Android.
+- **Blobs in IndexedDB.** Simplest to build and keeps the record and its
+  images in one Dexie store, but large images bloat the database and every
+  read of it.
+- **Compress on the way in.** Phone photos are several MB. Downscale and
+  re-encode on attach so a car with years of receipts stays a reasonable
+  size.
+- **Interactions to settle first.** The Android Auto Backup item above now
+  covers receipts too (they'd be swept into cloud backup by default). The CSV
+  export can't carry images, so it needs a companion, such as a zip or a
+  printable history report. Clear data (`src/lib/clearData.ts`) has to delete
+  the files, not just the rows. Receipts stay out of sync, like the vault.
+- **Sale packet.** The end goal is a per-vehicle export: every service record
+  with its receipt images, as a PDF or zip the user can hand to a buyer.
+  Worth designing the attachment model with that output in mind.
+
+Receipts are not sensitive the way the vault's documents are, so they don't
+need the Keystore encryption unless that turns out to be cheap to share.
+
+## Search service records
+
+Let the user search the service history to answer questions like "when did I
+last replace the serpentine belt?". Right now the Log only scrolls by date.
+
+- Match on service name, notes and location across a vehicle's records. The
+  location was dropped from the Log cards, so search is one place it stays
+  findable.
+- Show results with the newest first, and lead with the most recent match
+  and its odometer, since "last time" is the usual question.
+- Data is already local in Dexie, so a simple in-memory filter is enough at
+  this scale; no search index needed.
+- Decide whether it searches the current vehicle only or all of them, and
+  whether it also covers fillup notes.
+
+## App logo and icon
+
+The app has no logo of its own yet. The Android launcher icon is still
+Capacitor's stock one (the blue crossed-X in
+`android/app/src/main/res/mipmap-*`), the splash screens are the stock
+`splash.png` set under `res/drawable-*`, and `public/favicon.svg` is a
+leftover from the Vite template.
+
+- **Design once, export many.** One master vector mark should produce
+  everything: the adaptive launcher icon (a foreground layer plus the
+  `ic_launcher_background` color, currently white; keep the mark inside the
+  safe zone or launchers will crop it), the legacy square and round icons, a
+  monochrome layer for Android 13+ themed icons, the splash image, and the
+  favicon.
+- **Depends on the name.** If the app launches as "Glovebox" (see above),
+  the logo should be drawn for that name, so settle the name first or expect
+  to redo it.
+- **Match the app.** It has a dark UI with a blue accent (`--accent` in
+  `src/index.css`), so the icon should hold up on both a dark and a light
+  home screen.
+- **Tooling.** `@capacitor/assets` can generate all the Android icon and
+  splash sizes from a couple of source images, so no hand-exporting.
+- **Leave the `applicationId` alone** when swapping icons; only the image
+  resources change.
+
 ## Local events with anonymous RSVP
 
 Users post events (car meets and the like); anyone within some range sees
