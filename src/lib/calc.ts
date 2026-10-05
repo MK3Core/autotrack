@@ -1,4 +1,4 @@
-import type { Fillup, FillupWithMpg, MpgTier } from '../types';
+import type { Fillup, FillupWithMpg, MaintenanceRecord, MpgTier } from '../types';
 
 /**
  * Given any two of {pricePerGallon, totalCost, gallons}, compute the third.
@@ -288,5 +288,27 @@ export function computeLifetimeVehicleStats(fillups: Fillup[]): LifetimeVehicleS
     avgPricePerGallon: totalGallons > 0 ? round3(totalCost / totalGallons) : null,
     avgDaysBetweenFillups: computeAvgDaysBetweenFillups(fillups),
     excludedOutliers: mpgStats.excludedOutliers,
+  };
+}
+
+/**
+ * Everything spent on the vehicle (fuel plus service) divided by the miles
+ * covered by its entries, i.e. highest odometer minus lowest across both
+ * fillups and service records. Null until there are two distinct readings.
+ */
+export function computeTotalCostPerMile(fillups: Fillup[], records: MaintenanceRecord[]): {
+  totalSpend: number;
+  trackedMiles: number | null;
+  costPerMile: number | null;
+} {
+  const totalSpend =
+    fillups.reduce((sum, f) => sum + (f.totalCost ?? 0), 0) +
+    records.reduce((sum, r) => sum + (r.totalCost ?? 0), 0);
+  const odometers = [...fillups.map((f) => f.odometer), ...records.map((r) => r.odometer)];
+  const trackedMiles = odometers.length >= 2 ? Math.max(...odometers) - Math.min(...odometers) : null;
+  return {
+    totalSpend: round2(totalSpend),
+    trackedMiles,
+    costPerMile: trackedMiles ? round3(totalSpend / trackedMiles) : null,
   };
 }

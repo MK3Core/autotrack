@@ -6,7 +6,7 @@ import CheckEngineIcon from '../components/CheckEngineIcon';
 import { useVehicles } from '../lib/VehicleContext';
 import { computeLifetimeMpgStats, computeMpgSeries } from '../lib/calc';
 import { useInfiniteScroll } from '../lib/useInfiniteScroll';
-import { computeReminders, describeReminder, latestOdometer } from '../lib/maintenance';
+import { computeReminders, describeDueIn, latestOdometer } from '../lib/maintenance';
 import type { Fillup, FillupWithMpg, MaintenanceRecord, ServiceSchedule } from '../types';
 import './Log.css';
 
@@ -86,31 +86,34 @@ export default function Log() {
     return () => document.removeEventListener('pointerdown', onPointerDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entryState]);
-  const fillups = useLiveQuery<Fillup[], Fillup[]>(
+  const loadedFillups = useLiveQuery<Fillup[]>(
     () =>
       selectedVehicleId
         ? db.fillups.where('vehicleId').equals(selectedVehicleId).toArray()
         : Promise.resolve([]),
     [selectedVehicleId],
-    [],
   );
 
-  const records = useLiveQuery<MaintenanceRecord[], MaintenanceRecord[]>(
+  const loadedRecords = useLiveQuery<MaintenanceRecord[]>(
     () =>
       selectedVehicleId
         ? db.maintenance.where('vehicleId').equals(selectedVehicleId).toArray()
         : Promise.resolve([]),
     [selectedVehicleId],
-    [],
   );
-  const schedules = useLiveQuery<ServiceSchedule[], ServiceSchedule[]>(
+  const loadedSchedules = useLiveQuery<ServiceSchedule[]>(
     () =>
       selectedVehicleId
         ? db.schedules.where('vehicleId').equals(selectedVehicleId).toArray()
         : Promise.resolve([]),
     [selectedVehicleId],
-    [],
   );
+  // Undefined until the first read completes. Previous results are kept while
+  // switching vehicles, so this is only true for the instant after launch.
+  const loading = !loadedFillups || !loadedRecords || !loadedSchedules;
+  const fillups = loadedFillups ?? [];
+  const records = loadedRecords ?? [];
+  const schedules = loadedSchedules ?? [];
   const reminders = computeReminders(schedules, records, latestOdometer(fillups, records));
 
   const timeline: TimelineEntry[] = [
@@ -157,12 +160,14 @@ export default function Log() {
     }
   }
 
+  if (loading) return null;
+
   if (!vehicles.length) {
     return (
       <div className="card">
         <h2>Welcome to AutoTrack</h2>
         <p>Add your first vehicle to start logging fillups.</p>
-        <Link to="/vehicles" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>
+        <Link to="/garage" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>
           Add a Vehicle
         </Link>
       </div>
@@ -247,7 +252,7 @@ export default function Log() {
                 <span className="timeline__reminder-badge">Service due</span>
               </div>
               <div className="timeline__card-meta">
-                <span>{describeReminder(r)}</span>
+                <span className="timeline__reminder-due">{describeDueIn(r).join(' · ')}</span>
               </div>
             </Link>
           </div>

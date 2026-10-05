@@ -11,7 +11,7 @@ const EXIT_CONFIRM_MS = 2000;
 // Bottom-nav destinations. They have no BackButton of their own, so the
 // back gesture sends them to the Log page ('/') instead of walking through
 // whatever tabs were visited before.
-const TOP_LEVEL_PATHS = ['/reports', '/vehicles', '/data'];
+const TOP_LEVEL_PATHS = ['/reports', '/garage', '/data'];
 
 /**
  * Wires Android's back gesture/button into the router. Without a listener

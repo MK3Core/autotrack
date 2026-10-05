@@ -9,7 +9,7 @@ export default function VehicleSwitcher() {
     return (
       <header className="vswitch vswitch--empty">
         <span>AutoTrack</span>
-        <Link to="/vehicles" className="vswitch__add-link">
+        <Link to="/garage" className="vswitch__add-link">
           + Add your first vehicle
         </Link>
       </header>

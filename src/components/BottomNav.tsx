@@ -3,7 +3,7 @@ import './BottomNav.css';
 
 const items = [
   { to: '/', label: 'Log', icon: '⛽', end: true, iconClass: 'bottom-nav__icon--pump' },
-  { to: '/vehicles', label: 'Vehicles', icon: '🚗', end: false, iconClass: 'bottom-nav__icon--boost' },
+  { to: '/garage', label: 'Garage', icon: '🚗', end: false, iconClass: 'bottom-nav__icon--boost' },
   { to: '/reports', label: 'Reports', icon: '📈', end: false },
   { to: '/data', label: 'Data', icon: '💿', end: false },
 ];

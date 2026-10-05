@@ -359,3 +359,10 @@
   flex-shrink: 0;
   color: var(--warn);
 }
+
+.timeline__reminder-due {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

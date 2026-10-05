@@ -124,18 +124,21 @@ export function computeReminders(
 
 const plural = (n: number, unit: string) => `${n.toLocaleString()} ${unit}${n === 1 ? '' : 's'}`;
 
-/** e.g. "due in 100 mi", "overdue by 3 days", "due in 150 mi · due in 2 days". */
-export function describeReminder(r: Reminder): string {
+/**
+ * How far off a schedule is, by every measure it tracks, e.g.
+ * ["1,200 mi left", "43 days left"] or ["735 mi overdue", "due today"].
+ */
+export function describeDueIn(r: Reminder): string[] {
   const parts: string[] = [];
-  const add = (remaining: number | undefined, limit: number, label: (n: number) => string, nowText: string) => {
-    if (remaining === undefined || remaining > limit) return;
-    if (remaining < 0) parts.push(`overdue by ${label(-remaining)}`);
+  const fmt = (remaining: number | undefined, label: (n: number) => string, nowText: string) => {
+    if (remaining === undefined) return;
+    if (remaining < 0) parts.push(`${label(-remaining)} overdue`);
     else if (remaining === 0) parts.push(nowText);
-    else parts.push(`due in ${label(remaining)}`);
+    else parts.push(`${label(remaining)} left`);
   };
-  add(r.milesRemaining, REMINDER_MILES_WINDOW, (n) => `${n.toLocaleString()} mi`, 'due now');
-  add(r.daysRemaining, REMINDER_DAYS_WINDOW, (n) => plural(n, 'day'), 'due today');
-  return parts.join(' · ');
+  fmt(r.milesRemaining, (n) => `${n.toLocaleString()} mi`, 'due now');
+  fmt(r.daysRemaining, (n) => plural(n, 'day'), 'due today');
+  return parts;
 }
 
 export function describeInterval(s: Pick<ServiceSchedule, 'intervalMiles' | 'intervalMonths'>): string {

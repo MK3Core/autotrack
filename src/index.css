@@ -32,7 +32,7 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* No rubber-banding or pull-to-refresh on the page itself; scrolling
-     happens inside .app-content. */
+     happens inside each .app-pane. */
   overscroll-behavior: none;
 }
 

@@ -5,6 +5,7 @@ import ClearDataDialog from '../components/ClearDataDialog';
 import { clearAllData } from '../lib/clearData';
 import { exportVehicleCsv, importFile, type ImportSummary } from '../lib/importExport';
 import { useVehicles } from '../lib/VehicleContext';
+import { useOnTabLeave } from '../lib/useOnTabLeave';
 import './ImportExport.css';
 
 export default function ImportExport() {
@@ -14,6 +15,7 @@ export default function ImportExport() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  useOnTabLeave('/data', () => setConfirmingClear(false));
   const fillupCount = useLiveQuery(() => db.fillups.count(), [], 0);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {

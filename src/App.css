@@ -8,7 +8,21 @@
 
 .app-content {
   flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+/* Every tab is laid out at all times (so charts can measure themselves) but
+   only the active one is visible and interactive. */
+.app-pane {
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   padding: 1rem 1rem 5rem 1rem;
+  visibility: hidden;
+}
+
+.app-pane.is-active {
+  visibility: visible;
 }

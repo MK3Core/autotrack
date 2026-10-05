@@ -1,0 +1,149 @@
+.garage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.garage__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.garage__title h2 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garage__edit {
+  flex-shrink: 0;
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.9rem;
+}
+
+.garage__subtitle,
+.garage__hint,
+.garage__inactive-note {
+  margin: 0.3rem 0 0 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.garage__inactive-note {
+  color: var(--warn);
+}
+
+.garage__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1.1rem 1rem;
+}
+
+.garage__stats .stat__value {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.garage__stats .stat__label {
+  font-size: 0.7rem;
+}
+
+.garage__section-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.garage__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.garage__add {
+  align-self: flex-start;
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.garage__inactive ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.garage__inactive li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  color: var(--text-dim);
+}
+
+.garage__inactive li button {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.8rem;
+}
+
+.vehicle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  max-width: 480px;
+}
+
+.vehicle-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  flex: 1;
+  min-width: 0;
+}
+
+.vehicle-form input,
+.vehicle-form select,
+.vehicle-form textarea {
+  width: 100%;
+}
+
+.vehicle-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.vehicle-form__row label {
+  flex: 1 1 120px;
+}
+
+.vehicle-form__actions,
+.vehicle-form__manage {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.vehicle-form__manage {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
