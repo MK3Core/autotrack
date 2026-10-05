@@ -14,14 +14,11 @@ const PAGE_SIZE = 20;
 /** Must cover the longest closing animation in Log.css (plus its stagger). */
 const ENTRY_CLOSE_MS = 480;
 
-// Longest service list shown on a card before collapsing it, so the card
-// stays on one line. Full details live on the service's own page.
-const SERVICE_SUMMARY_MAX_CHARS = 24;
-
-function serviceSummary(names: string[]) {
-  const joined = names.join(', ');
-  if (joined.length <= SERVICE_SUMMARY_MAX_CHARS) return joined;
-  return names.length > 1 ? 'Multiple Services' : joined;
+/** "Oct 3": the month header above already gives the month and year. */
+function dayLabel(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 function monthLabel(dateStr: string) {
@@ -54,7 +51,7 @@ async function dismissOutlier(fillupId: string) {
 }
 
 export default function Log() {
-  const { vehicles, selectedVehicleId, selectedVehicle } = useVehicles();
+  const { vehicles, selectedVehicleId } = useVehicles();
   // 'closing' keeps the options mounted while they roll back up.
   const [entryState, setEntryState] = useState<'closed' | 'open' | 'closing'>('closed');
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -191,13 +188,6 @@ export default function Log() {
               <strong>New Entry</strong>
               <span className="timeline__add-icon">{choosingEntry ? '\u00d7' : '+'}</span>
             </div>
-            <div className="timeline__card-meta">
-              <span>
-                {choosingEntry
-                  ? 'Choose what to add'
-                  : `Add a fillup or service for ${selectedVehicle?.name ?? 'this vehicle'}`}
-              </span>
-            </div>
           </button>
         </div>
 
@@ -258,7 +248,6 @@ export default function Log() {
               </div>
               <div className="timeline__card-meta">
                 <span>{describeReminder(r)}</span>
-                <span>Tap to log it</span>
               </div>
             </Link>
           </div>
@@ -280,14 +269,15 @@ export default function Log() {
                 <div className="timeline__dot timeline__dot--ghost" />
                 <div className={`ghost-card ${row.mode === 'confirmed' ? 'ghost-card--static' : ''}`}>
                   {row.mode === 'confirmed' ? (
-                    <span className="ghost-card__label">
-                      Fillup missing here. Mileage calc resets before this entry.
-                    </span>
+                    <>
+                      <strong className="ghost-card__title">Missed fillup</strong>
+                      <span className="ghost-card__label">MPG restarts after this gap</span>
+                    </>
                   ) : (
                     <>
+                      <strong className="ghost-card__title">Missed a fillup?</strong>
                       <span className="ghost-card__label">
-                        {f.mpg} mpg here is way off this vehicle's typical{' '}
-                        {lifetimeStats.meanWholeMpg ?? 'N/A'} mpg. Was a fillup missed before this one?
+                        {f.mpg} mpg vs. the usual {lifetimeStats.meanWholeMpg ?? 'N/A'} mpg
                       </span>
                       <div className="ghost-card__actions">
                         <button className="btn-primary" onClick={() => confirmMissed(f.id)}>
@@ -307,21 +297,21 @@ export default function Log() {
             return (
               <div key={row.key} className="timeline__row">
                 <div className="timeline__dot timeline__dot--service" />
-                <Link to={`/service/${r.id}`} className="timeline__card timeline__card--service card">
-                  <div className="timeline__card-top">
-                    <strong>
-                      <span className="timeline__kind" aria-label="Service">
-                        🔧
-                      </span>
-                      {r.odometer.toLocaleString()} mi
-                    </strong>
-                    <span className="timeline__card-date">{r.date}</span>
-                  </div>
-                  <div className="timeline__card-meta">
-                    <span className="timeline__service-tag">Service</span>
-                    <span className="timeline__service-names">{serviceSummary(r.services.map((svc) => svc.name))}</span>
-                    {r.totalCost !== undefined && <span>${r.totalCost.toFixed(2)}</span>}
-                  </div>
+                <Link
+                  to={`/service/${r.id}`}
+                  className="timeline__card timeline__card--service timeline__entry card"
+                >
+                  <span className="timeline__entry-odometer">{r.odometer.toLocaleString()} mi</span>
+                  <span className="timeline__entry-headline timeline__service-names">
+                    <span className="timeline__service-first">{r.services[0]?.name ?? 'Service'}</span>
+                    {r.services.length > 1 && (
+                      <span className="timeline__service-more">+{r.services.length - 1}</span>
+                    )}
+                  </span>
+                  <span className="timeline__entry-sub">{dayLabel(r.date)}</span>
+                  <span className="timeline__entry-sub timeline__entry-price">
+                    {r.totalCost !== undefined ? `$${r.totalCost.toFixed(2)}` : ''}
+                  </span>
                 </Link>
               </div>
             );
@@ -331,27 +321,24 @@ export default function Log() {
           return (
             <div key={row.key} className="timeline__row">
               <div className="timeline__dot" />
-              <Link to={`/fillup/${f.id}`} className="timeline__card card">
-                <div className="timeline__card-top">
-                  <strong>
-                    <span className="timeline__kind" aria-label="Fillup">
-                      ⛽
-                    </span>
-                    {f.odometer.toLocaleString()} mi
-                  </strong>
-                  <span className="timeline__card-date">{f.date}</span>
-                </div>
-                <div className="timeline__card-meta">
-                  {f.pricePerGallon !== undefined && <span>${f.pricePerGallon.toFixed(3)}/gal</span>}
-                  {f.gallons !== undefined && <span>{f.gallons.toFixed(2)} gal</span>}
-                  {f.totalCost !== undefined && <span>${f.totalCost.toFixed(2)}</span>}
-                  {f.mpg !== null && (
-                    <span className={`timeline__mpg timeline__mpg--${f.mpgTier ?? 'average'}`}>
-                      {f.mpg} mpg
-                    </span>
-                  )}
-                  {!f.fullTank && <span className="badge">partial</span>}
-                </div>
+              <Link
+                to={`/fillup/${f.id}`}
+                className="timeline__card timeline__entry card"
+              >
+                <span className="timeline__entry-odometer">{f.odometer.toLocaleString()} mi</span>
+                {f.mpg !== null ? (
+                  <span className={`timeline__entry-headline timeline__mpg--${f.mpgTier ?? 'average'}`}>
+                    {f.mpg} <span className="timeline__entry-unit">mpg</span>
+                  </span>
+                ) : (
+                  <span className="timeline__entry-headline timeline__entry-headline--muted">
+                    {f.fullTank ? '' : 'Partial'}
+                  </span>
+                )}
+                <span className="timeline__entry-sub">{dayLabel(f.date)}</span>
+                <span className="timeline__entry-sub timeline__entry-price">
+                  {f.totalCost !== undefined ? `$${f.totalCost.toFixed(2)}` : ''}
+                </span>
               </Link>
             </div>
           );

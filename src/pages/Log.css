@@ -2,11 +2,11 @@
   position: relative;
   padding-left: 1.1rem;
   border-left: 2px solid var(--border);
-  margin-top: 1rem;
+  margin-top: 1.25rem;
 }
 
 .timeline__month {
-  margin: 1.25rem 0 0.6rem -1.1rem;
+  margin: 2rem 0 0.75rem -1.1rem;
   padding-left: 1.1rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -21,13 +21,13 @@
 
 .timeline__row {
   position: relative;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
 }
 
 .timeline__dot {
   position: absolute;
   left: -1.42rem;
-  top: 0.9rem;
+  top: 1.2rem;
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -44,12 +44,54 @@
 .timeline__card-top {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.3rem;
+  align-items: center;
 }
 
-.timeline__card-date {
+.timeline__card-top + .timeline__card-meta {
+  margin-top: 0.3rem;
+}
+
+/* Fillup and service cards: a 2x2 grid with mileage over date on the left
+   and the headline stat (mpg or service name) over price on the right.
+   Everything else lives behind a tap on the entry's own page. */
+.timeline__entry {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
+  row-gap: 0.2rem;
+  align-items: baseline;
+}
+
+.timeline__entry-odometer {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline__entry-headline {
+  justify-self: end;
+  max-width: 100%;
+  font-weight: 600;
+}
+
+.timeline__entry-headline--muted {
   color: var(--text-dim);
-  font-size: 0.9rem;
+  font-weight: 400;
+  font-size: 0.88rem;
+}
+
+.timeline__entry-unit {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.timeline__entry-sub {
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline__entry-price {
+  justify-self: end;
 }
 
 .timeline__card-meta {
@@ -59,11 +101,6 @@
   color: var(--text-dim);
   font-size: 0.88rem;
   align-items: center;
-}
-
-.timeline__mpg {
-  margin-left: auto;
-  font-weight: 600;
 }
 
 .timeline__mpg--average {
@@ -82,6 +119,7 @@
   width: 13px;
   height: 13px;
   left: -1.52rem;
+  top: 1rem;
   background: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-dim);
 }
@@ -103,53 +141,49 @@
 }
 
 .timeline__row--ghost {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
 }
 
 .timeline__dot--ghost {
-  background: transparent;
-  border: 2px dashed var(--text-dim);
-  opacity: 0.7;
+  background: var(--text-dim);
+  opacity: 0.6;
 }
 
+/* Still a "ghost" (dashed outline, no fill) but sized and structured like a
+   regular entry card so a gap in the history is hard to scroll past. */
 .ghost-card {
-  border: 1px dashed var(--border);
+  border: 1.5px dashed rgba(154, 161, 176, 0.5);
   border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  background: transparent;
-  opacity: 0.75;
+  padding: 1rem;
+  background: rgba(23, 26, 33, 0.45);
+  opacity: 0.6;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .ghost-card--static {
   cursor: default;
 }
 
-@media (hover: hover) {
-  .ghost-card:not(.ghost-card--static):hover {
-    opacity: 1;
-  }
+.ghost-card__title {
+  font-weight: 600;
 }
 
 .ghost-card__label {
   color: var(--text-dim);
-  font-size: 0.85rem;
-  font-style: italic;
+  font-size: 0.88rem;
 }
 
 .ghost-card__actions {
   display: flex;
   gap: 0.5rem;
-  flex-shrink: 0;
+  margin-top: 0.6rem;
 }
 
 .ghost-card__actions button {
-  font-size: 0.8rem;
-  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.8rem;
 }
 
 .timeline__sentinel {
@@ -200,20 +234,27 @@
   border-left: 3px solid var(--service);
 }
 
+/* First service name plus a count of the rest, e.g. "Brake Pads +2". A long
+   name truncates while the count stays visible. The full list is on the
+   service's own page. */
 .timeline__service-names {
-  /* A single very long service name truncates instead of wrapping. */
+  display: flex;
+  gap: 0.35rem;
   min-width: 0;
+  color: var(--service);
+}
+
+.timeline__service-first {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.timeline__service-tag {
-  color: var(--service);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.timeline__service-more {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  align-self: center;
 }
 
 .entry-toggle {
