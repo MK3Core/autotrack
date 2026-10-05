@@ -332,3 +332,68 @@ Most of the app already reads colors from CSS variables, so a theme is
 mostly a swapped variable set. A few colors are hard-coded (for example the
 `#3f78e0` hover in `.btn-primary`) and would need to move to variables first.
 The choice should persist across launches (localStorage is fine).
+
+## VIN display
+
+Wanted: display the VIN. Since v0.2.9 the Garage spec card already shows
+it, under the year/make/model/tank strip, as selectable monospace text. So
+this note is about going further than that; pin down what "display" should
+mean before building:
+
+- More prominent, or tap-to-copy with a "Copied" confirmation instead of
+  relying on a long-press text selection.
+- Shown elsewhere, such as on the edit form, in exports, or in a future
+  sale packet (see "Attach receipts to service records").
+- Decoded: NHTSA's free vPIC API turns a VIN into make, model, year, trim
+  and engine (see "Service schedule templates by make and model"). That
+  could prefill or check the vehicle's details. It means sending the VIN
+  to a third party, so make it an explicit user action, not automatic.
+
+## License plate display redesign
+
+Change how the license plate looks on the Garage spec card. Today it's a
+generic light-grey plate with dark monospace lettering and two bolt holes
+(`.plate` in `src/pages/Garage.css`). Direction not decided yet. Ideas:
+
+- Styles modeled on real plates: state or country designs, colors and
+  fonts, chosen per vehicle.
+- A plate-style picker on the vehicle form, stored on the `Vehicle`.
+- Copying real state plate artwork exactly may raise rights questions;
+  "inspired by" styles are safer.
+
+## Manufacturer logos for vehicles
+
+Show the maker's logo for each vehicle (Garage card badge, maybe the
+vehicle pills), in place of the generic car icon (`CarIcon`).
+
+- Pick the logo from the vehicle's existing `make` field. Normalize
+  spellings ("Chevy" vs "Chevrolet", "VW" vs "Volkswagen") and fall back to
+  the generic car icon when there's no match.
+- Bundle the logos with the app so it stays offline and private; no
+  per-vehicle lookups.
+- Logos are trademarks. Showing one to identify the user's own car is
+  generally nominative use, but the image files themselves have licenses.
+  Check the source before bundling. Candidates: Simple Icons (CC0 SVGs, but
+  covers only some car brands) and community car-logo datasets on GitHub
+  (licenses vary).
+- Monochrome versions tinted with the accent color would match the current
+  badge style better than full-color logos.
+
+## Reports page redesign
+
+Redo the Reports page entirely. Today it is one stats card with 12 numbers
+(avg/mean/best/worst mpg, total fuel cost, gallons, miles, cost per mile,
+price per gallon, fillup count, days between fillups) and three line
+charts (mpg, fuel price, odometer over time) in `src/pages/Reports.tsx`.
+
+- Apply the same ethos as the Log and Garage: key information up front,
+  details behind a tap, generous spacing.
+- The Garage now shows lifetime avg MPG, cost per mile and miles tracked,
+  so Reports should go deeper rather than repeat them.
+- Inconsistency to fix: Reports' "Cost / Mile" counts fuel only, while the
+  Garage's counts fuel plus service (`computeTotalCostPerMile` in
+  `src/lib/calc.ts`).
+- Service spending isn't reported at all yet: cost over time, by service,
+  and per month or year are natural additions.
+- Possible time-range filters (last 3 months, year, all time) and
+  comparisons between vehicles.
