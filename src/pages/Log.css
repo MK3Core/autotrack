@@ -267,14 +267,29 @@
    The wrapper animates its height (0fr <-> 1fr) so everything below eases
    down/up with it; each row also fades and slides, staggered so the cards
    peel off one after another (top first opening, bottom first closing). */
+/* The New Entry card and its fan share one wrapper that owns the gap below
+   them. Everything after the wrapper sees the same bottom margin whether the
+   fan is open, animating, at 0 height or unmounted, so nothing jumps when it
+   mounts or unmounts. (Left to themselves, the grid fan would stop margins
+   collapsing and shift the page by a margin's height.) */
+.entry-group {
+  margin-bottom: 0.75rem;
+}
+
+.entry-group > .timeline__row {
+  margin-bottom: 0;
+}
+
 .entry-fan {
   display: grid;
   grid-template-rows: 1fr;
   animation: entry-fan-open 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Ease in and out so the cards below glide to a stop instead of landing at
+   full speed. */
 .entry-fan.is-closing {
-  animation: entry-fan-close 380ms cubic-bezier(0.55, 0, 0.7, 0.2) forwards;
+  animation: entry-fan-close 400ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
 /* overflow must clip for the height animation, so the dots (which sit left of
@@ -284,9 +299,31 @@
   min-height: 0;
   margin-left: -1.6rem;
   padding-left: 1.6rem;
+  /* Anchor the cards to the bottom of the growing clip, so they slide out
+     from behind the New Entry card like a drawer. Anchored to the top, the
+     clip's slow final pixels would sweep over the last card's bottom edge and
+     its border would arrive late. This way any clipping happens at the top,
+     hidden under the New Entry card. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* 2px of clip room below the last card, cancelled out of the layout by the
+     negative margin. The layered cards are snapped to whole device pixels,
+     which can push a card's bottom border a fraction of a pixel past a clip
+     edge that sits exactly on it, cutting the border off. */
+  padding-bottom: 2px;
+  margin-bottom: -2px;
 }
 
 .entry-fan__row {
+  /* Gaps sit above each row, inside the clipped area, so a closed fan is
+     truly 0 tall. */
+  margin: 0.75rem 0 0 0;
+  /* Keep each card on its own compositor layer for as long as the fan is
+     shown. Otherwise the layer is dropped the instant the slide-in ends, and
+     the card is redrawn at its fractional resting position: text and borders
+     visibly shift by a sub-pixel at the very end of the animation. */
+  will-change: transform, opacity;
   animation: entry-row-in 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
@@ -322,17 +359,20 @@
   }
 }
 
+/* Slide and fade only. A scale here makes the browser draw the card's text
+   and 1px border slightly differently while it animates, and they visibly
+   snap to their final rendering the instant the animation ends. */
 @keyframes entry-row-in {
   from {
     opacity: 0;
-    transform: translateY(-22px) scale(0.97);
+    transform: translateY(-22px);
   }
 }
 
 @keyframes entry-row-out {
   to {
     opacity: 0;
-    transform: translateY(-22px) scale(0.97);
+    transform: translateY(-22px);
   }
 }
 

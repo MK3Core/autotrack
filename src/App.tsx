@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import VehicleSwitcher from './components/VehicleSwitcher';
 import BottomNav from './components/BottomNav';
@@ -8,6 +9,7 @@ import ServiceForm from './pages/ServiceForm';
 import Garage from './pages/Garage';
 import Reports from './pages/Reports';
 import ImportExport from './pages/ImportExport';
+import { useVehicles } from './lib/VehicleContext';
 import './App.css';
 
 // Bottom-nav tabs stay mounted for the life of the app, like a native tab
@@ -25,16 +27,32 @@ export default function App() {
   const location = useLocation();
   const { pathname } = location;
   const onTab = TABS.some((t) => t.path === pathname);
+  const { selectedVehicleId } = useVehicles();
+  const paneRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Scroll positions are per tab, not per vehicle: a different vehicle starts
+  // every tab back at the top. Layout effect, so the old position is never
+  // painted with the new vehicle's content.
+  useLayoutEffect(() => {
+    for (const pane of paneRefs.current) if (pane) pane.scrollTop = 0;
+  }, [selectedVehicleId]);
 
   return (
     <div className="app-shell">
       <NativeBackHandler />
       <VehicleSwitcher />
       <main className="app-content">
-        {TABS.map((t) => {
+        {TABS.map((t, i) => {
           const active = t.path === pathname;
           return (
-            <div key={t.path} className={`app-pane ${active ? 'is-active' : ''}`} inert={!active}>
+            <div
+              key={t.path}
+              ref={(el) => {
+                paneRefs.current[i] = el;
+              }}
+              className={`app-pane ${active ? 'is-active' : ''}`}
+              inert={!active}
+            >
               {t.element}
             </div>
           );

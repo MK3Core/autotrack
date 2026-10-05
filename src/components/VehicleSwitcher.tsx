@@ -1,9 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useVehicles } from '../lib/VehicleContext';
 import './VehicleSwitcher.css';
 
 export default function VehicleSwitcher() {
   const { vehicles, selectedVehicleId, selectVehicle } = useVehicles();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   if (!vehicles.length) {
     return (
@@ -31,6 +33,16 @@ export default function VehicleSwitcher() {
             </button>
           ))}
       </div>
+      {/* Only on the Garage tab, which opens its add form from ?add=1. */}
+      {pathname === '/garage' && (
+        <button
+          type="button"
+          className="vswitch__chip vswitch__chip--add"
+          onClick={() => navigate('/garage?add=1', { replace: true })}
+        >
+          + Add Vehicle
+        </button>
+      )}
     </header>
   );
 }

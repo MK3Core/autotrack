@@ -180,62 +180,64 @@ export default function Log() {
       {timeline.length === 0 && <p>No fillups or services logged yet.</p>}
 
       <div className="timeline">
-        <div className="timeline__row">
-          <div className="timeline__dot timeline__dot--add" />
-          <button
-            type="button"
-            className="timeline__card timeline__card--add card entry-toggle"
-            data-entry-keep
-            onClick={() => (choosingEntry ? closeEntry() : openEntry())}
-            aria-expanded={choosingEntry}
-          >
-            <div className="timeline__card-top">
-              <strong>New Entry</strong>
-              <span className="timeline__add-icon">{choosingEntry ? '\u00d7' : '+'}</span>
-            </div>
-          </button>
-        </div>
-
-        {entryState !== 'closed' && (
-          <div className={`entry-fan ${entryState === 'closing' ? 'is-closing' : ''}`}>
-            <div className="entry-fan__inner">
-              <div className="timeline__row entry-fan__row entry-fan__row--first">
-                <div className="timeline__dot" />
-                <Link to="/add" className="timeline__card card" data-entry-keep>
-                  <div className="timeline__card-top">
-                    <strong>
-                      <span className="timeline__kind" aria-hidden="true">
-                        ⛽
-                      </span>
-                      Add Fillup
-                    </strong>
-                    <span className="timeline__add-icon">+</span>
-                  </div>
-                  <div className="timeline__card-meta">
-                    <span>Log fuel, cost and mileage</span>
-                  </div>
-                </Link>
+        <div className="entry-group">
+          <div className="timeline__row">
+            <div className="timeline__dot timeline__dot--add" />
+            <button
+              type="button"
+              className="timeline__card timeline__card--add card entry-toggle"
+              data-entry-keep
+              onClick={() => (choosingEntry ? closeEntry() : openEntry())}
+              aria-expanded={choosingEntry}
+            >
+              <div className="timeline__card-top">
+                <strong>New Entry</strong>
+                <span className="timeline__add-icon">{choosingEntry ? '\u00d7' : '+'}</span>
               </div>
-              <div className="timeline__row entry-fan__row entry-fan__row--second">
-                <div className="timeline__dot timeline__dot--service" />
-                <Link to="/service/new" className="timeline__card timeline__card--service card" data-entry-keep>
-                  <div className="timeline__card-top">
-                    <strong>
-                      <span className="timeline__kind" aria-hidden="true">
-                        🔧
-                      </span>
-                      Add Service
-                    </strong>
-                    <span className="timeline__add-icon timeline__add-icon--service">+</span>
-                  </div>
-                  <div className="timeline__card-meta">
-                    <span>Log maintenance, repairs or repeating services</span>
-                  </div>
-                </Link>
-              </div>
-            </div>
+            </button>
           </div>
-        )}
+
+          {entryState !== 'closed' && (
+            <div className={`entry-fan ${entryState === 'closing' ? 'is-closing' : ''}`}>
+              <div className="entry-fan__inner">
+                <div className="timeline__row entry-fan__row entry-fan__row--first">
+                  <div className="timeline__dot" />
+                  <Link to="/add" className="timeline__card card" data-entry-keep>
+                    <div className="timeline__card-top">
+                      <strong>
+                        <span className="timeline__kind" aria-hidden="true">
+                          ⛽
+                        </span>
+                        Add Fillup
+                      </strong>
+                      <span className="timeline__add-icon">+</span>
+                    </div>
+                    <div className="timeline__card-meta">
+                      <span>Log fuel, cost and mileage</span>
+                    </div>
+                  </Link>
+                </div>
+                <div className="timeline__row entry-fan__row entry-fan__row--second">
+                  <div className="timeline__dot timeline__dot--service" />
+                  <Link to="/service/new" className="timeline__card timeline__card--service card" data-entry-keep>
+                    <div className="timeline__card-top">
+                      <strong>
+                        <span className="timeline__kind" aria-hidden="true">
+                          🔧
+                        </span>
+                        Add Service
+                      </strong>
+                      <span className="timeline__add-icon timeline__add-icon--service">+</span>
+                    </div>
+                    <div className="timeline__card-meta">
+                      <span>Log maintenance, repairs or repeating services</span>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {reminders.map((r) => (
           <div key={r.schedule.id} className="timeline__row">

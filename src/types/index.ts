@@ -5,6 +5,9 @@ export interface Vehicle {
   model?: string;
   year?: number;
   licensePlate?: string;
+  /** Stored uppercase with spaces and dashes removed. Usually 17 characters
+   *  (1981 and newer), but older vehicles' shorter numbers are allowed. */
+  vin?: string;
   fuelCapacityGal?: number;
   active: boolean;
   notes?: string;

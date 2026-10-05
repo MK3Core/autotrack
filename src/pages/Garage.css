@@ -4,16 +4,49 @@
   gap: 1.5rem;
 }
 
-.garage__title {
+.garage__hero {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.25rem;
+  background: linear-gradient(160deg, var(--surface-2), var(--surface) 60%);
+}
+
+.garage__hero-top {
+  display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.9rem;
+}
+
+.garage__badge {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.garage__car-icon {
+  width: 2.8rem;
+  height: 1.4rem;
+  /* The wheels sit on the bottom edge; nudge down to look centred. */
+  transform: translateY(0.1rem);
+}
+
+.garage__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
 }
 
 .garage__title h2 {
   margin: 0;
-  min-width: 0;
+  font-size: 1.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -21,16 +54,191 @@
 
 .garage__edit {
   flex-shrink: 0;
-  background: transparent;
-  border-color: var(--border);
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
 }
 
-.garage__subtitle,
-.garage__hint,
-.garage__inactive-note {
+.garage__edit svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+/* A dashed lane line between the name and the dash readouts. */
+.garage__lane {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--border) 0 14px, transparent 14px 24px);
+}
+
+.garage__dash {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.garage__dash-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.garage__dash-item--end {
+  align-items: flex-end;
+}
+
+.garage__dash-label,
+.garage__specs dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.odometer {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 6px;
+  background: #07080b;
+  border: 1px solid var(--border);
+}
+
+.odometer__digit {
+  width: 1.35rem;
+  padding: 0.2rem 0;
+  text-align: center;
+  font-family: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  border-radius: 3px;
+  /* Shaded top and bottom, like a drum rolling behind a window. */
+  background: linear-gradient(180deg, #11141a, #232835 50%, #11141a);
+}
+
+.odometer__digit.is-lead {
+  color: #4a5160;
+}
+
+/* A little license plate: light plate, dark embossed text, bolt holes. */
+.plate {
+  position: relative;
+  display: inline-block;
+  min-width: 6.5rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  background: #eef0f4;
+  border: 2px solid #b8bdc8;
+  box-shadow: inset 0 0 0 2px #eef0f4, inset 0 0 0 3px #c9cdd6;
+  color: #1b2130;
+  font-family: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.plate::before,
+.plate::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #9aa0ad;
+}
+
+.plate::before {
+  left: 7px;
+}
+
+.plate::after {
+  right: 7px;
+}
+
+.garage__specs-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.garage__specs {
+  margin: 0;
+  display: grid;
+  /* One row however many specs are filled in. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.garage__vin {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.garage__specs + .garage__vin {
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+}
+
+/* Selectable, so it can be long-pressed and copied for insurance or parts. */
+.garage__vin-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.garage__specs dd {
+  margin: 0.2rem 0 0 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garage__fill-in {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.garage__notes {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.88rem;
+}
+
+.garage__empty {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.garage__hint {
   margin: 0.3rem 0 0 0;
   color: var(--text-dim);
   font-size: 0.9rem;
@@ -38,6 +246,8 @@
 
 .garage__inactive-note {
   color: var(--warn);
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .garage__stats {
@@ -63,21 +273,6 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-dim);
-}
-
-.garage__footer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 0.5rem;
-}
-
-.garage__add {
-  align-self: flex-start;
-  background: transparent;
-  border-style: dashed;
-  color: var(--text-dim);
-  font-size: 0.9rem;
 }
 
 .garage__inactive ul {
@@ -146,4 +341,13 @@
   margin-top: 1.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
+}
+
+.vehicle-form__vin {
+  font-family: ui-monospace, 'SF Mono', 'Roboto Mono', Menlo, monospace;
+  letter-spacing: 0.06em;
+}
+
+.vehicle-form__help {
+  font-size: 0.8rem;
 }

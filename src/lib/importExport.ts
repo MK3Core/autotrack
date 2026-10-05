@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { v4 as uuidv4 } from 'uuid';
+import { normalizeVin } from './vehicle';
 import { db } from '../db';
 import type { Vehicle, Fillup, MaintenanceRecord, ServiceItem, ServiceSchedule } from '../types';
 import { serviceKey } from './maintenance';
@@ -109,6 +110,7 @@ const VEHICLE_ALIASES = {
   model: ['model'],
   year: ['year'],
   licensePlate: ['licenseplate', 'plate'],
+  vin: ['vin', 'vinnumber', 'chassis', 'chassisnumber'],
   // 'tank1capacity' is Fuelio's column name.
   fuelCapacityGal: ['fuelcapacitygal', 'fuelcapacity', 'tanksize', 'tank1capacity'],
   active: ['active'],
@@ -450,6 +452,8 @@ export async function importFile(file: File): Promise<ImportSummary> {
     const year = toNumber(pick(nrow, VEHICLE_ALIASES.year));
     if (year !== undefined) vehicle.year = year;
     vehicle.licensePlate = (pick(nrow, VEHICLE_ALIASES.licensePlate) as string) ?? vehicle.licensePlate;
+    const vin = pick(nrow, VEHICLE_ALIASES.vin);
+    if (vin) vehicle.vin = normalizeVin(String(vin)) || vehicle.vin;
     const cap = toNumber(pick(nrow, VEHICLE_ALIASES.fuelCapacityGal));
     // Some sources (Fuelio, when a tank size was never entered) write 0 rather
     // than leaving it blank; 0 gallons isn't a real tank, so treat it as unset.
@@ -648,6 +652,7 @@ export async function buildVehicleCsv(vehicleId: string): Promise<{ text: string
       Model: vehicle.model ?? '',
       Year: vehicle.year ?? '',
       'License plate': vehicle.licensePlate ?? '',
+      VIN: vehicle.vin ?? '',
       'Fuel capacity(gal)': vehicle.fuelCapacityGal ?? '',
       Active: vehicle.active ? 'Yes' : 'No',
       Notes: vehicle.notes ?? '',

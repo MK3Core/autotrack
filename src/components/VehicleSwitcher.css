@@ -50,3 +50,11 @@
   white-space: nowrap;
   text-decoration: none;
 }
+
+/* Pinned after the scrolling chips so it's always in reach. */
+.vswitch__chip--add {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+}
