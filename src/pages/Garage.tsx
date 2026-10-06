@@ -10,6 +10,7 @@ import { useOnTabLeave } from '../lib/useOnTabLeave';
 import { copyText } from '../lib/clipboard';
 import { deleteVehicleMaintenance, latestOdometer } from '../lib/maintenance';
 import { normalizeVin, VIN_LENGTH } from '../lib/vehicle';
+import { makeLogoUrl } from '../lib/makeLogos';
 import { DISTANCE_UNITS, FUEL_UNITS, unitsFor } from '../lib/units';
 import type { DistanceUnit, Fillup, FuelUnit, MaintenanceRecord, Vehicle } from '../types';
 import './Garage.css';
@@ -299,14 +300,23 @@ export default function Garage() {
   // only stands in when none of them are filled in.
   const yearMake = [selectedVehicle.year, selectedVehicle.make].filter(Boolean).join(' ');
   const hasDescription = !!(yearMake || selectedVehicle.model);
+  // The app is dark-only for now; a theme picker would pass the theme's background here.
+  const logoUrl = makeLogoUrl(selectedVehicle.make, 'dark');
 
   return (
     <div className="garage">
       <section className="garage__hero card">
         <div className="garage__hero-top">
-          <div className="garage__badge">
-            <CarIcon className="garage__car-icon" />
-          </div>
+          {/* The maker's logo in its own colors, or a generic car when the make is unknown. */}
+          {logoUrl ? (
+            <div className="garage__badge garage__badge--logo">
+              <img className="garage__logo" src={logoUrl} alt={`${selectedVehicle.make} logo`} />
+            </div>
+          ) : (
+            <div className="garage__badge">
+              <CarIcon className="garage__car-icon" />
+            </div>
+          )}
           <div className="garage__title">
             <h2>
               {yearMake && <span className="garage__year-make">{yearMake}</span>}

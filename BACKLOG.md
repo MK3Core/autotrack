@@ -332,6 +332,9 @@ Most of the app already reads colors from CSS variables, so a theme is
 mostly a swapped variable set. A few colors are hard-coded (for example the
 `#3f78e0` hover in `.btn-primary`) and would need to move to variables first.
 The choice should persist across launches (localStorage is fine).
+Manufacturer logos already handle this: pass the theme's background
+('light' or 'dark') to `makeLogoUrl` in `src/pages/Garage.tsx` instead of
+the hard-coded 'dark'. The notebook theme counts as light.
 
 ## VIN display
 
@@ -374,21 +377,22 @@ Still open, if per-vehicle styles are wanted:
 
 ## Manufacturer logos for vehicles
 
-Show the maker's logo for each vehicle (Garage card badge, maybe the
-vehicle pills), in place of the generic car icon (`CarIcon`).
+Done: the Garage card shows the maker's full-color logo straight on the card,
+picked from the vehicle's `make` (`src/lib/makeLogos.ts`), with the generic
+`CarIcon` when there's no match. 75 makes are bundled in
+`src/assets/make-logos` (sources in its `SOURCES.md`), all transparent.
+Dark-ink logos (Audi, VW, Toyota...) have a `.dark.webp` version for the dark
+theme, and `makeLogoUrl` takes the background to pick from. Spellings like
+"Chevy", "VW", "Mercedes" and "Range Rover" are aliased.
 
-- Pick the logo from the vehicle's existing `make` field. Normalize
-  spellings ("Chevy" vs "Chevrolet", "VW" vs "Volkswagen") and fall back to
-  the generic car icon when there's no match.
-- Bundle the logos with the app so it stays offline and private; no
-  per-vehicle lookups.
-- Logos are trademarks. Showing one to identify the user's own car is
-  generally nominative use, but the image files themselves have licenses.
-  Check the source before bundling. Candidates: Simple Icons (CC0 SVGs, but
-  covers only some car brands) and community car-logo datasets on GitHub
-  (licenses vary).
-- Monochrome versions tinted with the accent color would match the current
-  badge style better than full-color logos.
+Still open:
+
+- The logos are trademarks and not freely licensed (mostly from the
+  car-logos-dataset crawl of carlogos.org). Fine for a sideloaded app; revisit
+  before any store listing.
+- Not shown in the vehicle pills yet.
+- Thin wordmark-only logos (Dodge, Lucid, McLaren, Hummer) read small in the
+  badge.
 
 ## Reports page redesign
 

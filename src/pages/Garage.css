@@ -30,6 +30,28 @@
   color: var(--accent);
 }
 
+/*
+ * Logos sit straight on the card with no badge behind them, so they follow the
+ * theme. A square box rather than a circle, so tall crests and wide wordmarks
+ * both have room.
+ */
+.garage__badge--logo {
+  box-sizing: border-box;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0;
+  background: none;
+}
+
+.garage__logo {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+}
+
 .garage__car-icon {
   width: 2.4rem;
   height: 1.2rem;
