@@ -4,13 +4,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import CarIcon from '../components/CarIcon';
-import VehicleServices from '../components/VehicleServices';
+import ServiceReminders from '../components/ServiceReminders';
 import { useVehicles } from '../lib/VehicleContext';
 import { useOnTabLeave } from '../lib/useOnTabLeave';
-import { computeLifetimeMpgStats, computeTotalCostPerMile } from '../lib/calc';
+import { copyText } from '../lib/clipboard';
 import { deleteVehicleMaintenance, latestOdometer } from '../lib/maintenance';
 import { normalizeVin, VIN_LENGTH } from '../lib/vehicle';
-import type { Fillup, MaintenanceRecord, Vehicle } from '../types';
+import { DISTANCE_UNITS, FUEL_UNITS, unitsFor } from '../lib/units';
+import type { DistanceUnit, Fillup, FuelUnit, MaintenanceRecord, Vehicle } from '../types';
 import './Garage.css';
 
 const emptyForm = {
@@ -21,17 +22,19 @@ const emptyForm = {
   licensePlate: '',
   vin: '',
   fuelCapacityGal: '',
+  distanceUnit: 'mi' as DistanceUnit,
+  fuelUnit: 'gal' as FuelUnit,
   notes: '',
 };
 
 const ODOMETER_DIGITS = 6;
 
-/** Mileage as mechanical odometer wheels; leading zeros are dimmed. */
-function Odometer({ miles }: { miles: number }) {
-  const digits = String(Math.floor(miles)).padStart(ODOMETER_DIGITS, '0').split('');
+/** The odometer reading as mechanical wheels; leading zeros are dimmed. */
+function Odometer({ reading, unitLabel }: { reading: number; unitLabel: string }) {
+  const digits = String(Math.floor(reading)).padStart(ODOMETER_DIGITS, '0').split('');
   const firstSignificant = digits.findIndex((d) => d !== '0');
   return (
-    <div className="odometer" aria-label={`${Math.floor(miles).toLocaleString()} miles`}>
+    <div className="odometer" aria-label={`${Math.floor(reading).toLocaleString()} ${unitLabel}`}>
       {digits.map((d, i) => (
         <span
           key={i}
@@ -44,7 +47,38 @@ function Odometer({ miles }: { miles: number }) {
   );
 }
 
-/** The selected vehicle's details, light stats and repeating services. */
+const COPIED_MS = 1400;
+
+/**
+ * Wraps a vehicle graphic so one tap copies its value, for pasting a VIN or
+ * plate into a form. Shows a brief "Copied" tag on success. Without a value
+ * (e.g. the VIN placeholder) it renders the graphic as-is, not tappable.
+ */
+function Copyable({ value, label, children }: { value: string | null; label: string; children: React.ReactNode }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), COPIED_MS);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  if (!value) return <>{children}</>;
+  return (
+    <button
+      type="button"
+      className={`copyable ${copied ? 'is-copied' : ''}`}
+      aria-label={`Copy ${label}: ${value}`}
+      onClick={async () => setCopied(await copyText(value))}
+    >
+      {children}
+      <span className="copyable__tag" aria-live="polite">
+        {copied ? 'Copied' : ''}
+      </span>
+    </button>
+  );
+}
+
+/** The selected vehicle's details and service reminders. */
 export default function Garage() {
   const { vehicles, selectedVehicle, selectVehicle } = useVehicles();
   // null = not editing, 'new' = adding a vehicle, otherwise the id being edited.
@@ -88,6 +122,8 @@ export default function Garage() {
       licensePlate: v.licensePlate ?? '',
       vin: v.vin ?? '',
       fuelCapacityGal: v.fuelCapacityGal ? String(v.fuelCapacityGal) : '',
+      distanceUnit: v.distanceUnit ?? 'mi',
+      fuelUnit: v.fuelUnit ?? 'gal',
       notes: v.notes ?? '',
     });
   }
@@ -105,6 +141,8 @@ export default function Garage() {
       licensePlate: form.licensePlate.trim() || undefined,
       vin: normalizeVin(form.vin) || undefined,
       fuelCapacityGal: form.fuelCapacityGal ? parseFloat(form.fuelCapacityGal) : undefined,
+      distanceUnit: form.distanceUnit,
+      fuelUnit: form.fuelUnit,
       notes: form.notes.trim() || undefined,
       active: true,
       createdAt: new Date().toISOString(),
@@ -160,6 +198,35 @@ export default function Garage() {
               <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} />
             </label>
           </div>
+          {/* Labels only: switching units relabels existing numbers, it doesn't convert them. */}
+          <div className="vehicle-form__row">
+            <label>
+              Distance
+              <select
+                value={form.distanceUnit}
+                onChange={(e) => setForm({ ...form, distanceUnit: e.target.value as DistanceUnit })}
+              >
+                {DISTANCE_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Fuel
+              <select
+                value={form.fuelUnit}
+                onChange={(e) => setForm({ ...form, fuelUnit: e.target.value as FuelUnit })}
+              >
+                {FUEL_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div className="vehicle-form__row">
             <label>
               License plate
@@ -169,7 +236,7 @@ export default function Garage() {
               />
             </label>
             <label>
-              Fuel capacity (gal)
+              Fuel capacity ({unitsFor(form).vol})
               <input
                 type="number"
                 step="0.1"
@@ -226,15 +293,12 @@ export default function Garage() {
 
   if (!selectedVehicle || !data) return null;
 
-  const mpg = computeLifetimeMpgStats(data.fillups).average;
-  const { costPerMile, trackedMiles } = computeTotalCostPerMile(data.fillups, data.records);
   const odometer = latestOdometer(data.fillups, data.records);
-  const specs = [
-    { label: 'Year', value: selectedVehicle.year ? String(selectedVehicle.year) : null },
-    { label: 'Make', value: selectedVehicle.make },
-    { label: 'Model', value: selectedVehicle.model },
-    { label: 'Tank', value: selectedVehicle.fuelCapacityGal ? `${selectedVehicle.fuelCapacityGal} gal` : null },
-  ].filter((s): s is { label: string; value: string } => !!s.value);
+  // Year and make on one line with the model beneath, so long models get a line to
+  // themselves. The vehicle name is already shown in the switcher pill above, so it
+  // only stands in when none of them are filled in.
+  const yearMake = [selectedVehicle.year, selectedVehicle.make].filter(Boolean).join(' ');
+  const hasDescription = !!(yearMake || selectedVehicle.model);
 
   return (
     <div className="garage">
@@ -244,75 +308,61 @@ export default function Garage() {
             <CarIcon className="garage__car-icon" />
           </div>
           <div className="garage__title">
-            <h2>{selectedVehicle.name}</h2>
+            <h2>
+              {yearMake && <span className="garage__year-make">{yearMake}</span>}
+              {selectedVehicle.model && <span className="garage__model">{selectedVehicle.model}</span>}
+              {!hasDescription && selectedVehicle.name}
+            </h2>
+            {!hasDescription && (
+              <button type="button" className="garage__fill-in" onClick={() => startEdit(selectedVehicle)}>
+                Add year, make and model
+              </button>
+            )}
             {!selectedVehicle.active && <span className="garage__inactive-note">Inactive</span>}
           </div>
-          <button type="button" className="garage__edit" onClick={() => startEdit(selectedVehicle)}>
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z" />
-            </svg>
-            Edit
-          </button>
         </div>
 
-        <div className="garage__lane" />
-
-        <div className="garage__dash">
-          <div className="garage__dash-item">
-            <span className="garage__dash-label">Odometer</span>
-            {odometer !== null ? <Odometer miles={odometer} /> : <span className="garage__empty">No entries yet</span>}
-          </div>
-          {selectedVehicle.licensePlate && (
-            <div className="garage__dash-item garage__dash-item--end">
-              <span className="garage__dash-label">Plate</span>
-              <span className="plate">{selectedVehicle.licensePlate}</span>
-            </div>
-          )}
-        </div>
-
-        {specs.length > 0 || selectedVehicle.vin ? (
-          <div className="garage__specs-box">
-            {specs.length > 0 && (
-              <dl className="garage__specs">
-                {specs.map((s) => (
-                  <div key={s.label}>
-                    <dt>{s.label}</dt>
-                    <dd>{s.value}</dd>
-                  </div>
-                ))}
-              </dl>
+        {/* Odometer and plate, then VIN and Edit; tap any graphic to copy it. The graphics speak for themselves, so no captions. */}
+        <div className="garage__instruments">
+          {/* Odometer on the left, plate on the right; they wrap onto two lines if the screen is too narrow. */}
+          <div className="garage__instrument-row">
+            {odometer !== null && (
+              <Copyable value={String(Math.floor(odometer))} label="odometer">
+                <Odometer reading={odometer} unitLabel={unitsFor(selectedVehicle).distLong} />
+              </Copyable>
             )}
-            {selectedVehicle.vin && (
-              <div className="garage__vin">
-                <span className="garage__dash-label">VIN</span>
-                <span className="garage__vin-value">{selectedVehicle.vin}</span>
+            {selectedVehicle.licensePlate && (
+              <Copyable value={selectedVehicle.licensePlate} label="license plate">
+                <span className="plate" aria-label={`License plate ${selectedVehicle.licensePlate}`}>
+                  <span className="plate__text">{selectedVehicle.licensePlate}</span>
+                </span>
+              </Copyable>
+            )}
+          </div>
+          {/* Edit sits at the card's bottom right, on the VIN's line. */}
+          <div className="garage__vin-row">
+            {/* Printed like the VIN in the windshield; zeros until one is entered. */}
+            <Copyable value={selectedVehicle.vin ?? null} label="VIN">
+              <div
+                className={`vin-plate ${selectedVehicle.vin ? '' : 'is-placeholder'}`}
+                aria-label={selectedVehicle.vin ? `VIN ${selectedVehicle.vin}` : 'No VIN entered'}
+              >
+                <span className="vin-plate__text">{selectedVehicle.vin || '0'.repeat(VIN_LENGTH)}</span>
               </div>
-            )}
+            </Copyable>
+            <button type="button" className="garage__edit" onClick={() => startEdit(selectedVehicle)}>
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M11 2.5l2.5 2.5L6 12.5H3.5V10z" />
+              </svg>
+              Edit
+            </button>
           </div>
-        ) : (
-          <button type="button" className="garage__fill-in" onClick={() => startEdit(selectedVehicle)}>
-            Add year, make and model
-          </button>
-        )}
+        </div>
+
         {selectedVehicle.notes && <p className="garage__notes">{selectedVehicle.notes}</p>}
       </section>
 
-      <section className="garage__stats card">
-        <div className="stat">
-          <span className="stat__value">{mpg !== null ? mpg.toFixed(1) : 'N/A'}</span>
-          <span className="stat__label">Avg MPG</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">{costPerMile !== null ? `$${costPerMile.toFixed(2)}` : 'N/A'}</span>
-          <span className="stat__label">Cost / Mile</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">{trackedMiles !== null ? trackedMiles.toLocaleString() : 'N/A'}</span>
-          <span className="stat__label">Miles Tracked</span>
-        </div>
-      </section>
-
-      <VehicleServices vehicleId={selectedVehicle.id} />
+      <ServiceReminders vehicle={selectedVehicle} />
 
       {inactive.length > 0 && (
         <section className="garage__inactive">

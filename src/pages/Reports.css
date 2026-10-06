@@ -1,3 +1,20 @@
+.reports__quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 1.1rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.reports__quick-stats .stat__value {
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.reports__quick-stats .stat__label {
+  font-size: 0.7rem;
+}
+
 .reports__stats-card {
   margin-bottom: 1.25rem;
 }

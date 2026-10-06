@@ -10,8 +10,14 @@ import {
 } from 'recharts';
 import { db } from '../db';
 import { useVehicles } from '../lib/VehicleContext';
-import { computeLifetimeVehicleStats, computeMpgSeries } from '../lib/calc';
-import type { Fillup } from '../types';
+import {
+  computeLifetimeMpgStats,
+  computeLifetimeVehicleStats,
+  computeMpgSeries,
+  computeTotalCostPerMile,
+} from '../lib/calc';
+import { unitsFor } from '../lib/units';
+import type { Fillup, MaintenanceRecord } from '../types';
 import './Reports.css';
 
 function formatDateTick(timestamp: number) {
@@ -32,6 +38,14 @@ export default function Reports() {
     [selectedVehicleId],
     [],
   );
+  const records = useLiveQuery<MaintenanceRecord[], MaintenanceRecord[]>(
+    () =>
+      selectedVehicleId
+        ? db.maintenance.where('vehicleId').equals(selectedVehicleId).toArray()
+        : Promise.resolve([]),
+    [selectedVehicleId],
+    [],
+  );
 
   const withMpg = computeMpgSeries(fillups).sort(
     (a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer,
@@ -48,25 +62,44 @@ export default function Reports() {
   const odometerData = withMpg.map((f) => ({ date: new Date(f.date).getTime(), odometer: f.odometer }));
 
   const stats = computeLifetimeVehicleStats(fillups);
+  const u = unitsFor(selectedVehicle);
+  // Quick stats: cost per mile here counts service as well as fuel.
+  const quickMpg = computeLifetimeMpgStats(fillups).average;
+  const { costPerMile, trackedMiles } = computeTotalCostPerMile(fillups, records);
 
   return (
     <div>
       <h2>Reports</h2>
+
+      <section className="reports__quick-stats card">
+        <div className="stat">
+          <span className="stat__value">{quickMpg !== null ? quickMpg.toFixed(1) : 'N/A'}</span>
+          <span className="stat__label">Avg {u.economy}</span>
+        </div>
+        <div className="stat">
+          <span className="stat__value">{costPerMile !== null ? `$${costPerMile.toFixed(2)}` : 'N/A'}</span>
+          <span className="stat__label">Cost / {u.perDist}</span>
+        </div>
+        <div className="stat">
+          <span className="stat__value">{trackedMiles !== null ? trackedMiles.toLocaleString() : 'N/A'}</span>
+          <span className="stat__label">{u.distTitle} Tracked</span>
+        </div>
+      </section>
 
       <div className="card reports__stats-card">
         <h3>Lifetime Vehicle Stats{selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
         <div className="reports__stats-grid">
           <div className="stat">
             <span className="stat__value">{stats.avgMpg ?? 'N/A'}</span>
-            <span className="stat__label">Avg MPG</span>
+            <span className="stat__label">Avg {u.economy}</span>
           </div>
           <div className="stat">
             <span className="stat__value">{stats.meanMpg ?? 'N/A'}</span>
             <span
               className="stat__label"
-              title="Each fillup's mpg is truncated to a whole number before averaging"
+              title={`Each fillup's ${u.economy} is truncated to a whole number before averaging`}
             >
-              Mean MPG
+              Mean {u.economy}
             </span>
           </div>
           <div className="stat">
@@ -85,25 +118,25 @@ export default function Reports() {
             <span className="stat__value">
               {stats.totalGallons !== null ? stats.totalGallons.toFixed(1) : 'N/A'}
             </span>
-            <span className="stat__label">Total Gallons</span>
+            <span className="stat__label">Total {u.volTitle}</span>
           </div>
           <div className="stat">
             <span className="stat__value">
               {stats.totalMiles !== null ? stats.totalMiles.toLocaleString() : 'N/A'}
             </span>
-            <span className="stat__label">Miles Tracked</span>
+            <span className="stat__label">{u.distTitle} Tracked</span>
           </div>
           <div className="stat">
             <span className="stat__value">
               {stats.costPerMile !== null ? `$${stats.costPerMile.toFixed(3)}` : 'N/A'}
             </span>
-            <span className="stat__label">Cost / Mile</span>
+            <span className="stat__label">Cost / {u.perDist}</span>
           </div>
           <div className="stat">
             <span className="stat__value">
               {stats.avgPricePerGallon !== null ? `$${stats.avgPricePerGallon.toFixed(3)}` : 'N/A'}
             </span>
-            <span className="stat__label">Avg Price / Gallon</span>
+            <span className="stat__label">Avg Price / {u.vol}</span>
           </div>
           <div className="stat">
             <span className="stat__value">{stats.fillupCount}</span>
@@ -118,7 +151,7 @@ export default function Reports() {
         </div>
         {stats.excludedOutliers > 0 && (
           <p className="reports__outlier-note">
-            {stats.excludedOutliers} fillup{stats.excludedOutliers === 1 ? '' : 's'} excluded from the mpg
+            {stats.excludedOutliers} fillup{stats.excludedOutliers === 1 ? '' : 's'} excluded from the {u.economy}
             figures above as outliers (see the "check mileage" flags in the Log). These are likely missed
             fillups that were never marked.
           </p>
@@ -126,9 +159,9 @@ export default function Reports() {
       </div>
 
       <div className="card reports__chart-card">
-        <h3>Fuel Efficiency Over Time (mpg){selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
+        <h3>Fuel Efficiency Over Time ({u.economy}){selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
         {mpgData.length < 2 ? (
-          <p className="reports__empty">Not enough complete fillup data yet to chart mileage.</p>
+          <p className="reports__empty">Not enough complete fillup data yet to chart fuel economy.</p>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={mpgData}>
@@ -146,14 +179,14 @@ export default function Reports() {
                 contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }}
                 labelFormatter={formatDateLabel}
               />
-              <Line type="monotone" dataKey="mpg" stroke="#4f8cff" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="mpg" name={u.economy} stroke="#4f8cff" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}
       </div>
 
       <div className="card reports__chart-card">
-        <h3>Fuel Price Over Time ($/gal){selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
+        <h3>Fuel Price Over Time ($/{u.vol}){selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
         {priceData.length < 2 ? (
           <p className="reports__empty">Not enough price data yet to chart.</p>
         ) : (
@@ -173,16 +206,16 @@ export default function Reports() {
                 contentStyle={{ background: '#171a21', border: '1px solid #2a2f3a' }}
                 labelFormatter={formatDateLabel}
               />
-              <Line type="monotone" dataKey="price" stroke="#4caf7d" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="price" name={`$ / ${u.vol}`} stroke="#4caf7d" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}
       </div>
 
       <div className="card reports__chart-card">
-        <h3>Odometer Over Time{selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
+        <h3>Odometer Over Time ({u.dist}){selectedVehicle ? ` · ${selectedVehicle.name}` : ''}</h3>
         {odometerData.length < 2 ? (
-          <p className="reports__empty">Not enough fillup data yet to chart mileage.</p>
+          <p className="reports__empty">Not enough fillup data yet to chart distance.</p>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={odometerData}>
@@ -205,7 +238,7 @@ export default function Reports() {
                 labelFormatter={formatDateLabel}
                 formatter={(v) => Number(v).toLocaleString()}
               />
-              <Line type="monotone" dataKey="odometer" stroke="#9085e9" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="odometer" name={`Odometer (${u.dist})`} stroke="#9085e9" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}

@@ -1,3 +1,6 @@
+export type DistanceUnit = 'mi' | 'km';
+export type FuelUnit = 'gal' | 'L';
+
 export interface Vehicle {
   id: string;
   name: string;
@@ -8,7 +11,11 @@ export interface Vehicle {
   /** Stored uppercase with spaces and dashes removed. Usually 17 characters
    *  (1981 and newer), but older vehicles' shorter numbers are allowed. */
   vin?: string;
+  /** Raw tank size in the vehicle's fuel unit (the name predates units). */
   fuelCapacityGal?: number;
+  /** Labels only: numbers are stored raw. Missing means miles / gallons. */
+  distanceUnit?: DistanceUnit;
+  fuelUnit?: FuelUnit;
   active: boolean;
   notes?: string;
   createdAt: string;

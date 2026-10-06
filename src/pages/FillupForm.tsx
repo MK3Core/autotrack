@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import BackButton from '../components/BackButton';
 import { useVehicles } from '../lib/VehicleContext';
+import { unitsFor } from '../lib/units';
 import { computeThirdValue } from '../lib/calc';
 import { GAS_TYPE_PRESETS, type Fillup, type FillupCalcField } from '../types';
 import './FillupForm.css';
@@ -29,6 +30,8 @@ export default function FillupForm() {
   const existing = useLiveQuery(() => (id ? db.fillups.get(id) : undefined), [id]);
 
   const [vehicleId, setVehicleId] = useState(selectedVehicleId ?? '');
+  // Labels follow the vehicle chosen in this form.
+  const u = unitsFor(vehicles.find((v) => v.id === vehicleId));
   const [date, setDate] = useState(today());
   const [time, setTime] = useState(nowTime());
   const [odometer, setOdometer] = useState('');
@@ -178,7 +181,7 @@ export default function FillupForm() {
         </div>
 
         <label>
-          Odometer (mi)
+          Odometer ({u.dist})
           <input
             type="number"
             inputMode="decimal"
@@ -192,7 +195,7 @@ export default function FillupForm() {
         <fieldset className="fillup-form__triangle">
           <legend>Enter any two: the third is calculated{filledCount < 2 ? ' automatically' : ''}</legend>
           <label>
-            Price / gal ($)
+            Price / {u.vol} ($)
             <input
               type="number"
               inputMode="decimal"
@@ -202,7 +205,7 @@ export default function FillupForm() {
             />
           </label>
           <label>
-            Gallons
+            {u.volTitle}
             <input
               type="number"
               inputMode="decimal"

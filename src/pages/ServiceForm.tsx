@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import BackButton from '../components/BackButton';
 import { useVehicles } from '../lib/VehicleContext';
+import { unitsFor } from '../lib/units';
 import {
   latestOdometer,
   saveMaintenanceRecord,
@@ -66,6 +67,8 @@ export default function ServiceForm() {
   );
 
   const [vehicleId, setVehicleId] = useState(selectedVehicleId ?? '');
+  // Labels follow the vehicle chosen in this form.
+  const u = unitsFor(vehicles.find((v) => v.id === vehicleId));
   const [date, setDate] = useState(todayString());
   const [odometer, setOdometer] = useState('');
   const [location, setLocation] = useState('');
@@ -237,7 +240,7 @@ export default function ServiceForm() {
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </label>
           <label>
-            Odometer (mi)
+            Odometer ({u.dist})
             <input
               type="number"
               inputMode="decimal"
@@ -310,7 +313,7 @@ export default function ServiceForm() {
               {line.repeat && (
                 <div className="service-line__interval">
                   <label>
-                    Every (mi)
+                    Every ({u.dist})
                     <input
                       type="number"
                       inputMode="numeric"

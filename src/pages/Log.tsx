@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import CheckEngineIcon from '../components/CheckEngineIcon';
 import { useVehicles } from '../lib/VehicleContext';
+import { unitsFor } from '../lib/units';
 import { computeLifetimeMpgStats, computeMpgSeries } from '../lib/calc';
 import { useInfiniteScroll } from '../lib/useInfiniteScroll';
 import { computeReminders, describeDueIn, latestOdometer } from '../lib/maintenance';
@@ -131,6 +132,7 @@ export default function Log() {
     })),
   ].sort((a, b) => b.date.localeCompare(a.date) || b.odometer - a.odometer);
   const lifetimeStats = computeLifetimeMpgStats(fillups);
+  const u = unitsFor(vehicles.find((v) => v.id === selectedVehicleId));
 
   const { visibleItems, sentinelRef, hasMore, loadMore } = useInfiniteScroll(
     timeline,
@@ -254,7 +256,7 @@ export default function Log() {
                 <span className="timeline__reminder-badge">Service due</span>
               </div>
               <div className="timeline__card-meta">
-                <span className="timeline__reminder-due">{describeDueIn(r).join(' · ')}</span>
+                <span className="timeline__reminder-due">{describeDueIn(r, u.dist).join(' · ')}</span>
               </div>
             </Link>
           </div>
@@ -278,13 +280,13 @@ export default function Log() {
                   {row.mode === 'confirmed' ? (
                     <>
                       <strong className="ghost-card__title">Missed fillup</strong>
-                      <span className="ghost-card__label">MPG restarts after this gap</span>
+                      <span className="ghost-card__label">{u.economy} restarts after this gap</span>
                     </>
                   ) : (
                     <>
                       <strong className="ghost-card__title">Missed a fillup?</strong>
                       <span className="ghost-card__label">
-                        {f.mpg} mpg vs. the usual {lifetimeStats.meanWholeMpg ?? 'N/A'} mpg
+                        {f.mpg} {u.economy} vs. the usual {lifetimeStats.meanWholeMpg ?? 'N/A'} {u.economy}
                       </span>
                       <div className="ghost-card__actions">
                         <button className="btn-primary" onClick={() => confirmMissed(f.id)}>
@@ -308,7 +310,7 @@ export default function Log() {
                   to={`/service/${r.id}`}
                   className="timeline__card timeline__card--service timeline__entry card"
                 >
-                  <span className="timeline__entry-odometer">{r.odometer.toLocaleString()} mi</span>
+                  <span className="timeline__entry-odometer">{r.odometer.toLocaleString()} {u.dist}</span>
                   <span className="timeline__entry-headline timeline__service-names">
                     <span className="timeline__service-first">{r.services[0]?.name ?? 'Service'}</span>
                     {r.services.length > 1 && (
@@ -332,10 +334,10 @@ export default function Log() {
                 to={`/fillup/${f.id}`}
                 className="timeline__card timeline__entry card"
               >
-                <span className="timeline__entry-odometer">{f.odometer.toLocaleString()} mi</span>
+                <span className="timeline__entry-odometer">{f.odometer.toLocaleString()} {u.dist}</span>
                 {f.mpg !== null ? (
                   <span className={`timeline__entry-headline timeline__mpg--${f.mpgTier ?? 'average'}`}>
-                    {f.mpg} <span className="timeline__entry-unit">mpg</span>
+                    {f.mpg} <span className="timeline__entry-unit">{u.economy}</span>
                   </span>
                 ) : (
                   <span className="timeline__entry-headline timeline__entry-headline--muted">

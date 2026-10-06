@@ -127,8 +127,9 @@ const plural = (n: number, unit: string) => `${n.toLocaleString()} ${unit}${n ==
 /**
  * How far off a schedule is, by every measure it tracks, e.g.
  * ["1,200 mi left", "43 days left"] or ["735 mi overdue", "due today"].
+ * `dist` is the vehicle's distance label ("mi" or "km"); the numbers are raw.
  */
-export function describeDueIn(r: Reminder): string[] {
+export function describeDueIn(r: Reminder, dist = 'mi'): string[] {
   const parts: string[] = [];
   const fmt = (remaining: number | undefined, label: (n: number) => string, nowText: string) => {
     if (remaining === undefined) return;
@@ -136,14 +137,17 @@ export function describeDueIn(r: Reminder): string[] {
     else if (remaining === 0) parts.push(nowText);
     else parts.push(`${label(remaining)} left`);
   };
-  fmt(r.milesRemaining, (n) => `${n.toLocaleString()} mi`, 'due now');
+  fmt(r.milesRemaining, (n) => `${n.toLocaleString()} ${dist}`, 'due now');
   fmt(r.daysRemaining, (n) => plural(n, 'day'), 'due today');
   return parts;
 }
 
-export function describeInterval(s: Pick<ServiceSchedule, 'intervalMiles' | 'intervalMonths'>): string {
+export function describeInterval(
+  s: Pick<ServiceSchedule, 'intervalMiles' | 'intervalMonths'>,
+  dist = 'mi',
+): string {
   const parts: string[] = [];
-  if (s.intervalMiles) parts.push(`${s.intervalMiles.toLocaleString()} mi`);
+  if (s.intervalMiles) parts.push(`${s.intervalMiles.toLocaleString()} ${dist}`);
   if (s.intervalMonths) parts.push(plural(s.intervalMonths, 'month'));
   return parts.length === 2 ? `Every ${parts[0]} or ${parts[1]}` : `Every ${parts[0] ?? '?'}`;
 }
