@@ -4,6 +4,37 @@ Ideas and known gaps that are deliberately deferred, not forgotten. Nothing
 here is scheduled; it's a record of "later" decisions so they don't get
 re-litigated or lost between sessions.
 
+## Official App Store and Google Play launch
+
+The long-term goal is to publish AutoTrack officially on both Google Play and
+Apple's App Store. Today it's distributed only as a sideloaded APK from GitHub
+Releases (tracked by Obtainium). Not scheduled, but several items below feed
+into it:
+
+- **Name and icon.** Settle "Launch name: Glovebox" (including a trademark
+  search) and "App logo and icon" before the first listing.
+- **iOS app.** See "iOS app packaging": no `ios/` project exists yet.
+- **Manufacturer logos.** The bundled logos aren't licensed (see
+  "Manufacturer logos for vehicles"). Store review and trademark complaints
+  make this riskier than on GitHub, so revisit before submitting.
+- **Privacy disclosures.** Both stores require a privacy policy and a data
+  declaration (Play's Data safety form, Apple's privacy labels). The
+  local-only design makes these simple; keep it that way. Settle "Android
+  Auto Backup is on" first.
+- **Accounts and testing.** Google Play needs a developer account (one-time
+  fee) and, for new personal accounts, a closed test with a minimum number of
+  testers before production access. Apple needs the paid Apple Developer
+  Program and a Mac (or a macOS CI runner) to build and sign. Check current
+  requirements when starting; they change.
+- **Keep `com.autotrack.app`.** Existing sideloaded installs only update from
+  the Play build if the package name matches and it's signed with the same
+  key. Play App Signing re-signs uploads with Google's key, so plan the
+  migration path for current users (or accept a one-time reinstall via
+  export/import).
+- **Events stay out.** "Local events with anonymous RSVP" brings Play's
+  user-generated content rules with it; don't let it block the tracker's
+  launch.
+
 ## Backend + sync service
 
 Right now AutoTrack is fully client-side: all data lives in the browser's
@@ -285,7 +316,8 @@ Android is done: Capacitor builds a signed release APK via GitHub Actions
 (`.github/workflows/release-apk.yml`) on every `vX.Y.Z` tag push, published
 as a GitHub Release that Obtainium tracks for updates on-device. iOS
 packaging hasn't been scaffolded at all yet (no `ios/` project, no signing
-setup, no distribution path). Revisit if/when an iPhone install is wanted.
+setup, no distribution path). Needed for the App Store launch (see
+"Official App Store and Google Play launch").
 
 ## Mobile keyboard verification
 

@@ -1,34 +1,134 @@
-See [BACKLOG.md](./BACKLOG.md) for planned/deferred future work (backend + sync, iOS packaging).
+# AutoTrack
 
-# React + TypeScript + Vite
+A private fuel and maintenance log for your vehicles. AutoTrack runs as an
+Android app (or in any browser), keeps every record on the device, and needs
+no account, server or internet connection.
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Features
 
-Currently, two official plugins are available:
+- **Multiple vehicles.** Switch between them from the top of the screen. Each
+  vehicle has its own units (miles or kilometers, gallons or liters) and can
+  be marked inactive to hide it from the switcher.
+- **Fillups.** Log date, odometer, fuel grade, station and notes. Enter any
+  two of price per unit, amount and total cost and the third is calculated.
+  Partial tanks and missed fillups are handled so fuel economy stays accurate.
+- **Log.** One timeline of fillups and service visits, grouped by month, with
+  each fillup's fuel economy ranked against the vehicle's own history.
+  Readings that look like an unlogged fillup are flagged as "check mileage"
+  so you can mark them as missed or confirm them.
+- **Service records.** One entry per shop visit with any number of services,
+  optional itemized costs and the total actually paid.
+- **Service reminders.** Make a service repeat every N miles and/or M months.
+  The Garage shows what's due next, measured from the last time it was logged.
+- **Garage.** A spec card for the selected vehicle: maker's logo, year, make
+  and model, odometer, license plate and VIN (tap any of the last three to
+  copy it), plus its service reminders.
+- **Reports.** Average fuel economy, cost per mile (fuel plus service), miles
+  tracked, detailed fuel stats and charts of fuel economy, fuel price and
+  odometer over time.
+- **Import / export.** Import backups from AutoTrack (.csv), Drivvo (.xlsx)
+  and Fuelio (.csv). Export one .csv per vehicle with its details and full
+  history; it opens in Excel or Sheets and imports back into AutoTrack.
+- **Clear data.** Wipe everything to start fresh.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Your data
 
-## React Compiler
+Everything is stored in the app's local database (IndexedDB) on the device.
+There is no sync or cloud backup, so use **Import / Export** to back up a
+vehicle or move it to another device. Uninstalling the app or clearing its
+storage deletes your data.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Install (Android)
 
-## Expanding the Oxlint configuration
+AutoTrack isn't on any app store yet; official Google Play and App Store
+releases are planned (see [Roadmap](#roadmap)). Until then, signed APKs are
+published on the [Releases page](https://github.com/MK3Core/autotrack/releases).
+Requires Android 7.0 or newer.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+**With Obtainium (recommended, gets updates automatically):**
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+1. Install [Obtainium](https://github.com/ImranR98/Obtainium).
+2. Tap **Add App** and paste `https://github.com/MK3Core/autotrack`.
+3. Install it from Obtainium. New releases show up as updates.
+
+**Manually:**
+
+1. Download the latest `autotrack-x.y.z.apk` from the Releases page on your
+   phone.
+2. Open it and allow your browser or file manager to install unknown apps
+   when Android asks.
+3. To update, install the newer APK over the old one. Your data is kept.
+
+There is no iOS build yet; an official App Store release is planned.
+
+## Development
+
+Built with React, TypeScript and Vite, with Dexie for storage and Capacitor
+for the Android app.
+
+```sh
+npm install
+npm run dev        # dev server at http://localhost:5173 (add -- --host for your phone)
+npm run build      # type-check and build the web app into dist/
+npm run lint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Project layout:
+
+- `src/pages`: the tabs (Log, Garage, Reports, Import / Export) and the
+  fillup and service forms
+- `src/lib`: calculations, reminders, import/export, units, make logos
+- `src/db`: the Dexie database schema
+- `src/assets/make-logos`: bundled manufacturer logos (see its `SOURCES.md`)
+- `android`: the Capacitor Android project
+
+### Building the Android app
+
+Requires the Android SDK and JDK 21 (Android Studio provides both).
+
+```sh
+npm run android:sync   # build the web app and copy it into android/
+npm run android:open   # open the project in Android Studio to run or build
+```
+
+### Releasing
+
+Pushing a `vX.Y.Z` tag runs `.github/workflows/release-apk.yml`, which builds
+a signed release APK and publishes it as a GitHub Release (the version name
+comes from the tag):
+
+```sh
+git tag v0.3.3
+git push origin v0.3.3
+```
+
+Signing uses the repository secrets `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
+Every release must be signed with the same key, or Android will refuse to
+update existing installs. Running the workflow by hand from the Actions tab
+builds a dev version instead, published as a release tagged
+`v0.0.<run number>-dev`.
+
+## Roadmap
+
+The goal is an official launch on **Google Play** and the **Apple App
+Store** someday. Ideas planned for the future, with notes on each, are in
+[BACKLOG.md](./BACKLOG.md):
+
+- Official Google Play and App Store releases (and an iOS app)
+- A launch name ("Glovebox" is the working name) and app icon
+- Encrypted backup, and eventually end-to-end encrypted sync across devices
+- Receipt photos on service records, and a "sale packet" export for buyers
+- A secure on-device vault for insurance and registration cards
+- Manufacturer service schedules that fill in reminders automatically
+- Search across service history
+- Themes: light mode and a "Glovebox notebook" look
+- A redesigned Reports page with service spending and time ranges
+- Save-to-folder export
+- Local car events with anonymous RSVP
+
+## Logos
+
+Manufacturer logos are trademarks of their owners and are shown only to
+identify your own vehicle. Sources are listed in
+`src/assets/make-logos/SOURCES.md`.
