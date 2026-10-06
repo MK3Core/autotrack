@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Security fixes for npm packages are opened whenever an advisory lands
+  # (repo setting: Dependabot security updates). This entry only groups them
+  # and keeps routine version-bump PRs off; open-pull-requests-limit 0 does
+  # not affect security updates.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ['*']
+
+  # The release workflow's actions (checkout, setup-node, etc.) get weekly
+  # update PRs, since those run with the signing secrets.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
