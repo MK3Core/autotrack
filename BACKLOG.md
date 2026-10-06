@@ -335,13 +335,18 @@ The choice should persist across launches (localStorage is fine).
 
 ## VIN display
 
-Wanted: display the VIN. Since v0.2.9 the Garage spec card already shows
-it, under the year/make/model/tank strip, as selectable monospace text. So
-this note is about going further than that; pin down what "display" should
-mean before building:
+Wanted: display the VIN. Since v0.2.9 the Garage spec card shows it.
 
-- More prominent, or tap-to-copy with a "Copied" confirmation instead of
-  relying on a long-press text selection.
+Done in v0.3.0:
+
+- More prominent: styled like the VIN plate printed on a windshield
+  (`.vin-plate` in `src/pages/Garage.css`), with Edit beside it.
+- Tap-to-copy with a "Copied" confirmation (`Copyable` in
+  `src/pages/Garage.tsx`, `src/lib/clipboard.ts`). The odometer and plate
+  copy the same way.
+
+Still open:
+
 - Shown elsewhere, such as on the edit form, in exports, or in a future
   sale packet (see "Attach receipts to service records").
 - Decoded: NHTSA's free vPIC API turns a VIN into make, model, year, trim
@@ -351,9 +356,15 @@ mean before building:
 
 ## License plate display redesign
 
-Change how the license plate looks on the Garage spec card. Today it's a
-generic light-grey plate with dark monospace lettering and two bolt holes
-(`.plate` in `src/pages/Garage.css`). Direction not decided yet. Ideas:
+Change how the license plate looks on the Garage spec card.
+
+Done in v0.3.0: the generic light-grey plate is now a dark US plate modeled
+on Colorado's black-and-white (black stamped steel, thin white rolled edge,
+bolt holes, white monospace characters), sitting on one line with the
+odometer and tap-to-copy (`.plate` in `src/pages/Garage.css`). It's one
+fixed style for every vehicle.
+
+Still open, if per-vehicle styles are wanted:
 
 - Styles modeled on real plates: state or country designs, colors and
   fonts, chosen per vehicle.
@@ -381,18 +392,19 @@ vehicle pills), in place of the generic car icon (`CarIcon`).
 
 ## Reports page redesign
 
-Redo the Reports page entirely. Today it is one stats card with 12 numbers
-(avg/mean/best/worst mpg, total fuel cost, gallons, miles, cost per mile,
-price per gallon, fillup count, days between fillups) and three line
-charts (mpg, fuel price, odometer over time) in `src/pages/Reports.tsx`.
+Not started. Redo the Reports page entirely. Today it is a quick-stats row
+(avg MPG, cost per mile counting fuel plus service, miles tracked), then one
+stats card with 12 numbers (avg/mean/best/worst mpg, total fuel cost,
+gallons, miles, cost per mile, price per gallon, fillup count, days between
+fillups) and three line charts (mpg, fuel price, odometer over time) in
+`src/pages/Reports.tsx`.
 
 - Apply the same ethos as the Log and Garage: key information up front,
   details behind a tap, generous spacing.
-- The Garage now shows lifetime avg MPG, cost per mile and miles tracked,
-  so Reports should go deeper rather than repeat them.
-- Inconsistency to fix: Reports' "Cost / Mile" counts fuel only, while the
-  Garage's counts fuel plus service (`computeTotalCostPerMile` in
-  `src/lib/calc.ts`).
+- Inconsistency to fix: the quick-stats "Cost / Mile" counts fuel plus
+  service (`computeTotalCostPerMile` in `src/lib/calc.ts`, matching the
+  Garage), but the detailed card's "Cost / Mile" counts fuel only, under the
+  same label. Avg MPG and miles tracked are also shown twice.
 - Service spending isn't reported at all yet: cost over time, by service,
   and per month or year are natural additions.
 - Possible time-range filters (last 3 months, year, all time) and
