@@ -1,0 +1,108 @@
+Vehicle Name,Manufacturer,Model,Year,License plate,Fuel capacity(gal),Active,Notes
+C4S,Porsche,911 Carrera 4S,2009,ZZZ-ZZZZ,16.9,Yes,
+
+Date,Time,Odometer,Gas Type,Price Per Gallon,Total Cost,Gallons,Full Tank,Missed Fillup Before,Gas Station,Notes
+2023-11-16,19:20,75655,Gas Premium,4.019,45.09,11.219,Yes,No,,
+2023-11-21,19:24,75840,Gas Premium,3.199,37.73,11.794,Yes,No,,
+2023-12-05,19:30,75968,Gas Premium,4.289,36.31,8.466,Yes,No,,
+2023-12-29,19:35,76179,Gas Premium,3.399,46.79,13.766,Yes,No,,
+2024-01-25,19:36,76439,Gas Premium,3.539,52.18,14.744,Yes,No,,
+2024-02-20,19:37,76703,Gas Premium,3.699,54.4,14.707,Yes,No,,
+2024-03-09,07:41,76885,Gas Premium,3.699,48.76,13.182,Yes,No,,
+2024-03-29,10:33,77077,Gas Premium,3.699,51.96,14.047,Yes,No,Conoco,
+2024-04-10,15:44,77269,Gas Premium,3.899,48.89,12.539,Yes,No,Conoco,
+2024-05-03,08:54,77445,Gas Premium,3.999,48.99,12.251,Yes,No,Conoco,
+2024-05-04,17:19,77602,Gas Premium,5.886,29.84,5.07,No,No,High Plains Raceway,
+2024-05-04,17:56,77632,Gas Premium,3.699,38.31,10.357,Yes,No,Conoco,
+2024-05-05,07:25,77722,Gas Premium,3.699,13.92,3.763,Yes,No,Conoco,
+2024-05-05,15:44,77820,Gas Premium,3.699,37.25,10.07,Yes,No,Conoco,
+2024-06-08,15:38,78211,Gas Premium,3.779,49.25,13.033,Yes,No,Conoco,
+2024-06-22,17:12,78421,Gas Premium,3.999,56.46,14.119,Yes,No,Conoco,
+2024-06-29,19:41,78682,Gas Premium,3.979,49.15,12.351,Yes,No,Conoco,
+2024-07-04,10:05,78888,Gas Premium,4.133,47.92,11.594,Yes,No,Kum & Go,
+2024-07-06,10:34,79191,Gas Premium,4.499,59.9,13.314,Yes,No,Kum & Go,
+2024-08-30,09:09,79517,Gas Premium,4.199,16.59,3.951,Yes,Yes,Kum & Go,
+2024-08-30,15:21,79870,Gas Premium,3.749,51.55,13.75,Yes,No,Caseys,
+2024-08-31,08:28,80203,Gas Premium,3.559,44.89,12.613,Yes,No,Kum & Go,
+2024-09-01,13:20,80555,Gas Premium,4.819,70.93,14.719,Yes,No,Kum & Go,
+2024-09-02,12:17,80845,Gas Premium,4.249,54.11,12.735,Yes,No,Beacon & Bridge Market,
+2024-09-25,16:40,81012,Gas Premium,4.559,44.72,9.809,Yes,No,Shell,
+2024-10-25,12:39,81259,Gas Premium,4.099,60.25,14.699,Yes,No,Shell,
+2024-12-27,12:11,81418,Gas Premium,4.179,38.34,9.174,Yes,No,Admiral,
+2025-04-25,08:45,81658,Gas Premium,4.519,67.33,14.899,Yes,No,Admiral,
+2025-05-31,12:04,81888,Gas Premium,3.959,57.53,14.531,Yes,No,Admiral,
+2025-06-07,06:35,81999,Gas Premium,4.099,29.9,7.294,Yes,No,Admiral,
+2025-06-07,20:55,82221,Gas Premium,4.599,46.44,10.098,Yes,No,Admiral,
+2025-06-17,10:59,82510,Gas Premium,4.419,59.39,13.44,Yes,No,Admiral,
+2025-06-30,09:36,82707,Gas Premium,4.449,46.99,10.562,Yes,No,Shell,
+2025-06-30,15:04,83000,Gas Premium,4.149,50.45,12.16,Yes,No,Mobile,
+2025-07-11,10:45,83247,Gas Premium,4.399,54.25,12.332,Yes,No,Shell,
+2025-08-06,14:00,83467,Gas Premium,4.399,50.87,11.564,Yes,No,Shell,
+2025-08-14,13:59,83657,Gas Premium,4.089,56.04,13.705,Yes,No,Shell,
+2025-08-25,08:59,83890,Gas Premium,4.519,64.4,14.251,Yes,No,Shell,
+2025-08-30,11:54,84164,Gas Premium,4.639,59.3,12.783,Yes,No,Shell,
+2025-09-01,12:33,84405,Gas Premium,4.119,52.23,12.68,Yes,No,Shell,
+2025-09-04,15:39,84711,Gas Premium,4.129,55.06,13.335,Yes,No,Shell,
+2025-09-20,11:04,84909,Gas Premium,3.999,52.11,13.031,Yes,No,Shell,
+2025-10-01,11:51,85122,Gas Premium,3.749,44.24,11.8,Yes,No,Mutual @ Goat,
+2025-10-16,10:18,85332,Gas Premium,3.819,49.8,13.04,Yes,No,Mutual @ Goat,
+2025-10-27,12:28,85525,Gas Premium,3.999,51.82,12.958,Yes,No,Shell,
+2025-11-08,09:01,85636,Gas Premium,4.259,28.33,6.652,Yes,No,Shell,
+2025-11-08,14:27,85930,Gas Premium,4.379,54.6,12.469,Yes,No,Shell,
+2025-11-20,18:29,86143,Gas Premium,4.179,46.27,11.072,Yes,No,Shell,
+2026-03-07,10:24,86224,Gas Premium,5.049,30.24,5.989,Yes,No,Shell,
+2026-03-07,16:29,86578,Gas Premium,4.779,67.28,14.078,Yes,No,Shell,
+2026-03-09,13:43,86843,Gas Premium,4.799,57.99,12.084,Yes,No,Shell,
+2026-04-17,10:50,87107,Gas Premium,4.859,67.3,13.851,Yes,No,Shell,
+2026-05-13,13:29,87333,Gas Premium,5.799,84.44,14.561,Yes,No,Shell,
+2026-05-21,08:44,87519,Gas Premium,5.889,67.19,11.409,Yes,No,Shell,
+2026-05-24,07:13,87769,Gas Premium,4.839,49.35,10.198,Yes,No,Shell,
+2026-05-27,14:31,88076,Gas Premium,5.589,76.6,13.705,Yes,No,Shell,
+2026-06-06,12:36,88265,Gas Premium,5.069,63.56,12.539,Yes,No,Shell,
+2026-06-21,12:14,88466,Gas Premium,4.959,63.93,12.892,Yes,No,Shell,
+2026-07-08,13:19,88680,Gas Premium,4.799,64.96,13.536,Yes,No,Shell,
+2026-07-21,08:29,88906,Premium (93),5.519,74.92,13.575,Yes,No,Shell,
+2026-08-11,12:30,89117,Premium (93),5.419,72.58,13.394,Yes,No,Shell,
+2026-09-20,12:45,89501,Premium (93),6.199,81.7,13.18,Yes,Yes,,
+2026-10-01,16:09,89704,Premium (93),5.499,71.78,13.053,Yes,No,Circle K,
+
+Record ID,Service Date,Service Odometer,Service Location,Service Total Cost,Service,Service Cost,Service Notes
+1,2023-11-17,75655,,125,Registration,125,One-Time $25 fee for black plates
+2,2023-12-04,75903,The Import Mechanics,420.82,Battery,420.82,Battery replaced with OEM battery. Previous battery was not OEM.
+3,2023-12-04,75903,The Import Mechanics,159,Wheel Alignment,159,Alignment performed - Wheel was off-center. All good now.
+4,2023-12-04,75903,The Import Mechanics,125,Brake Fluid,125,"Replaced corroding brake leader lines going to calipers. No calipers needed replaced, just the leader lines."
+5,2023-12-15,76000,Windshield Replacement,575,Windshield Replacement,575,
+6,2024-01-03,76317,Porsche of Littleton,245,Labor Cost,245,"Reflashed and updated the PCM to enable Bluetooth, USB, and Auxiliary inputs.
+Steering wheel off center after work was done. Will return for this fix."
+7,2024-03-07,76867,The Import Mechanics,248.05,Oil Change,248.05,
+8,2024-03-07,76867,The Import Mechanics,738.3,PDK Clutch Oil,738.3,
+9,2024-03-07,76867,The Import Mechanics,801.22,Differential Fluids,801.22,
+10,2024-03-07,76867,The Import Mechanics,447.76,AWD Controller Fluid,447.76,
+11,2024-03-07,76867,The Import Mechanics,738.29,PDK Transmission Fluid,738.29,
+12,2024-03-20,77011,The Import Mechanics,839.16,Spark Plugs,839.16,New Spark plugs and bore scope. Bore’s show very small wear. 3/10 according to shop. Excellent shape and great news.
+13,2024-08-28,79488,Berg Performance,1521.96,Belts,1521.96,"Serpentine belt, drive, tensioner, and roller were all replaced."
+14,2024-08-28,79488,Berg Performance,3174.18,Power Steering,3174.18,"Power Steering Rack Replaced. During the removal of the inner tie rods, the power steering gear inner seal right side was found to be leaking. Installed aftermarket steering rack with new outer tie rods. The p/s gear came with inner tie rods and boots already installed. Installed new outer tie rods. Reinstalled P/S gear. Filled with new power steering fluid. Tested. P/S works well."
+15,2024-08-28,79488,Berg Performance,1760.8,Coolant System,1760.8,Front coolant lines are leaking. During the removal attempt the corrosion at the fittings was too great and the main Aluminum hard water pipes came apart. Replaced front coolant lines from the rear of the front subframe to the radiator connections at the front fender liners. Filled system with new coolant. Tested. Leak is no longer preset.
+16,2024-08-28,79488,Berg Performance,300,Wheel Alignment,300,
+17,2024-08-28,79488,Berg Performance,7457.83,Suspension System,7457.83,"Suspension replacement. B16 Damptronic install. Replaced top mounts, sway bar links, corroded hardware.
+
+Removed old, worn, and corroded suspension. Installed Bilstein B16 Damtronic coil over with PASM with new strut mounts and bearings. Installed new front and rear sway bar links. Test drove. Drives well. PASM is now very responsive."
+18,2024-08-28,79488,Berg Performance,168.74,Miscellaneous,168.74,Hood Struts Replaced. Removed old failed hood struts. Installed new hood struts. tested. The Front frunk hood stays up.
+19,2025-06-03,81895,Worldwide Import Automotive,80,Air Filter,80,Test sample taken for Blackstone
+20,2025-06-03,81895,Worldwide Import Automotive,190,Oil Change,190,Test sample taken for Blackstone
+21,2025-08-01,83372,Worldwide Import Automotive,1800,Lower Control Arm,1800,"File attached is for labor for exhaust, and front lower control arm replacements. Also replaced passenger axle boot."
+22,2025-08-01,83372,Worldwide Import Automotive,5800,New Exhaust,5800,"File attached is for labor for exhaust, and front lower control arm replacements. Also replaced passenger axle boot."
+23,2026-06-11,88340,Worldwide Import Automotive,310,Oil Change,200,Dust Shields Rattling on drivers sides F and R
+23,2026-06-11,88340,Worldwide Import Automotive,310,Brake Fluid,110,Dust Shields Rattling on drivers sides F and R
+24,2026-08-08,88906,M22 Detailing,2600,Exterior Care & Detailing,2000,"Removing tint
+Paint correction
+Full detailing
+Ceramic coating"
+24,2026-08-08,88906,M22 Detailing,2600,PPF Front Bumper,600,"Removing tint
+Paint correction
+Full detailing
+Ceramic coating"
+
+Recurring Service,Every (mi),Every (months)
+Oil Change,5000,12
+Brake Fluid,10000,12
