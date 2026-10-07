@@ -428,20 +428,28 @@ Still open:
 
 ## Reports page redesign
 
-Not started. Redo the Reports page entirely. Today it is a quick-stats row
-(avg MPG, cost per mile counting fuel plus service, miles tracked), then one
-stats card with 12 numbers (avg/mean/best/worst mpg, total fuel cost,
-gallons, miles, cost per mile, price per gallon, fillup count, days between
-fillups) and three line charts (mpg, fuel price, odometer over time) in
-`src/pages/Reports.tsx`.
+Done: `src/pages/Reports.tsx`, with the stats in `src/lib/reports.ts` and the
+visual pieces in `src/components/ReportViz.tsx`.
 
-- Apply the same ethos as the Log and Garage: key information up front,
-  details behind a tap, generous spacing.
-- Inconsistency to fix: the quick-stats "Cost / Mile" counts fuel plus
-  service (`computeTotalCostPerMile` in `src/lib/calc.ts`, matching the
-  Garage), but the detailed card's "Cost / Mile" counts fuel only, under the
-  same label. Avg MPG and miles tracked are also shown twice.
-- Service spending isn't reported at all yet: cost over time, by service,
-  and per month or year are natural additions.
-- Possible time-range filters (last 3 months, year, all time) and
-  comparisons between vehicles.
+- A range picker (3M, 6M, 1Y, All) scopes the whole page. Ranges end on the
+  vehicle's newest entry, not today, so a parked or sold car still shows data.
+- Trend chips compare a range with the equal-length stretch before it. "All"
+  compares rates (MPG, price, cost per mile) for the last 3 months against
+  everything earlier, and shows no trend on totals.
+- Cards: Driving (distance, fillups, volume), Fuel economy (average, every
+  tank on a worst-to-best strip), Cost of ownership (total and per distance,
+  split into fuel and service), Fuel price (average, low/high range bar with
+  the latest price). Each opens a chart behind a tap.
+- The old cost-per-mile mismatch is gone: every per-distance figure divides by
+  the same distance (fillups and service visits), so fuel + service per mile
+  adds up to the total.
+- Dropped: "Mean MPG" (each tank truncated to a whole number first) and the
+  odometer-over-time chart, replaced by distance per month.
+
+Still open:
+
+- **Vehicle value.** Pull a valuation for the make, model, year and mileage
+  from a pricing API, then show value, value lost per month and per mile, and
+  fold depreciation into cost of ownership.
+- Comparing vehicles side by side.
+- Service spending by service type (oil, tires, brakes).

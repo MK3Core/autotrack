@@ -1,41 +1,230 @@
-.reports__quick-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  padding: 1.1rem 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.reports__quick-stats .stat__value {
-  font-size: 1.3rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.reports__quick-stats .stat__label {
-  font-size: 0.7rem;
-}
-
-.reports__stats-card {
-  margin-bottom: 1.25rem;
-}
-
-.reports__stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+.reports {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
-  margin-top: 0.75rem;
 }
 
-.reports__outlier-note {
-  font-size: 0.85rem;
-  color: var(--warn);
-  margin: 1rem 0 0 0;
+.reports__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
 }
 
-.reports__chart-card {
-  margin-bottom: 1.25rem;
+.reports__header h2 {
+  margin: 0;
+}
+
+/* Segmented control: one pill track, the active range filled. */
+.reports__ranges {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.reports__range {
+  min-width: 2.75rem;
+  min-height: 32px;
+  padding: 0.25rem 0.6rem;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.reports__range.is-active {
+  background: var(--accent);
+  color: white;
+}
+
+.reports__caption {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
 }
 
 .reports__empty {
+  margin: 0;
   color: var(--text-dim);
+}
+
+.reports__aside {
+  margin: -0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.reports__outlier-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--warn);
+}
+
+.reports__chart {
+  padding-top: 0.25rem;
+  padding-bottom: 0.75rem;
+}
+
+.reports__chart-note {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* ---- KPI row -------------------------------------------------------------- */
+
+.reports__kpis {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.kpi__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.kpi--lead .kpi__value {
+  font-size: 1.75rem;
+}
+
+.kpi__value small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.kpi__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Hero figure ---------------------------------------------------------- */
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.5rem;
+}
+
+.hero__value {
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.hero__unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.hero .trend {
+  align-self: center;
+}
+
+/* Total on the left, the per-distance figure on the right. */
+.hero--split {
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.hero__main,
+.hero__side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hero__side {
+  align-items: flex-end;
+}
+
+.hero__side-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---- Cost breakdown ------------------------------------------------------- */
+
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.cost-table th,
+.cost-table td {
+  padding: 0.35rem 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-table thead th {
+  padding-top: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cost-table tbody th {
+  text-align: left;
+  font-weight: 600;
+}
+
+.cost-table td {
+  width: 30%;
+}
+
+.cost-table tbody tr + tr {
+  border-top: 1px solid var(--border);
+}
+
+.cost-table__count {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

@@ -1,4 +1,4 @@
-import type { Fillup, FillupWithMpg, MaintenanceRecord, MpgTier } from '../types';
+import type { Fillup, FillupWithMpg, MpgTier } from '../types';
 
 /**
  * Given any two of {pricePerGallon, totalCost, gallons}, compute the third.
@@ -215,100 +215,5 @@ export function computeLifetimeMpgStats(fillups: Fillup[]): LifetimeMpgStats {
     meanWholeMpg: round1(meanWholeMpg),
     sampleCount: clean.length,
     excludedOutliers: series.length - clean.length,
-  };
-}
-
-export interface LifetimeVehicleStats {
-  fillupCount: number;
-  avgMpg: number | null;
-  meanMpg: number | null;
-  bestMpg: number | null;
-  worstMpg: number | null;
-  totalCost: number | null;
-  totalGallons: number | null;
-  totalMiles: number | null;
-  costPerMile: number | null;
-  avgPricePerGallon: number | null;
-  avgDaysBetweenFillups: number | null;
-  excludedOutliers: number;
-}
-
-/**
- * Average calendar days between consecutive fillups. Skips the gap ending at
- * any fillup flagged `missedFillup` or `mpgOutlier`, since those intervals
- * likely span more than one real-world fillup and would otherwise inflate
- * the average (the same reasoning as excluding them from the mpg average).
- */
-function computeAvgDaysBetweenFillups(fillups: Fillup[]): number | null {
-  const series = computeMpgSeries(fillups).sort(
-    (a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer,
-  );
-
-  const gapsDays: number[] = [];
-  for (let i = 1; i < series.length; i++) {
-    const curr = series[i];
-    if (curr.missedFillup || curr.mpgOutlier) continue;
-    const days = (new Date(curr.date).getTime() - new Date(series[i - 1].date).getTime()) / 86_400_000;
-    if (days > 0) gapsDays.push(days);
-  }
-
-  if (!gapsDays.length) return null;
-  return round1(gapsDays.reduce((a, b) => a + b, 0) / gapsDays.length);
-}
-
-/**
- * A broader set of lifetime stats for a single vehicle: cost, gallons, miles
- * driven, and the mpg extremes, alongside the average/mean from
- * `computeLifetimeMpgStats`. Best/worst mpg exclude the same outliers that
- * average/mean do, since an outlier is usually a data artifact (a missed
- * fillup), not a real great or bad tank of gas.
- */
-export function computeLifetimeVehicleStats(fillups: Fillup[]): LifetimeVehicleStats {
-  const mpgStats = computeLifetimeMpgStats(fillups);
-  const cleanMpgValues = computeMpgSeries(fillups)
-    .filter((f) => f.mpg !== null && !f.mpgOutlier)
-    .map((f) => f.mpg as number);
-
-  const totalCost = fillups.reduce((sum, f) => sum + (f.totalCost ?? 0), 0);
-  const totalGallons = fillups.reduce((sum, f) => sum + (f.gallons ?? 0), 0);
-
-  const odometers = fillups.map((f) => f.odometer);
-  const totalMiles = odometers.length >= 2 ? Math.max(...odometers) - Math.min(...odometers) : null;
-
-  return {
-    fillupCount: fillups.length,
-    avgMpg: mpgStats.average,
-    meanMpg: mpgStats.meanWholeMpg,
-    bestMpg: cleanMpgValues.length ? round2(Math.max(...cleanMpgValues)) : null,
-    worstMpg: cleanMpgValues.length ? round2(Math.min(...cleanMpgValues)) : null,
-    totalCost: fillups.length ? round2(totalCost) : null,
-    totalGallons: fillups.length ? round2(totalGallons) : null,
-    totalMiles,
-    costPerMile: totalMiles && totalMiles > 0 ? round3(totalCost / totalMiles) : null,
-    avgPricePerGallon: totalGallons > 0 ? round3(totalCost / totalGallons) : null,
-    avgDaysBetweenFillups: computeAvgDaysBetweenFillups(fillups),
-    excludedOutliers: mpgStats.excludedOutliers,
-  };
-}
-
-/**
- * Everything spent on the vehicle (fuel plus service) divided by the miles
- * covered by its entries, i.e. highest odometer minus lowest across both
- * fillups and service records. Null until there are two distinct readings.
- */
-export function computeTotalCostPerMile(fillups: Fillup[], records: MaintenanceRecord[]): {
-  totalSpend: number;
-  trackedMiles: number | null;
-  costPerMile: number | null;
-} {
-  const totalSpend =
-    fillups.reduce((sum, f) => sum + (f.totalCost ?? 0), 0) +
-    records.reduce((sum, r) => sum + (r.totalCost ?? 0), 0);
-  const odometers = [...fillups.map((f) => f.odometer), ...records.map((r) => r.odometer)];
-  const trackedMiles = odometers.length >= 2 ? Math.max(...odometers) - Math.min(...odometers) : null;
-  return {
-    totalSpend: round2(totalSpend),
-    trackedMiles,
-    costPerMile: trackedMiles ? round3(totalSpend / trackedMiles) : null,
   };
 }

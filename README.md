@@ -23,9 +23,11 @@ no account, server or internet connection.
 - **Garage.** A spec card for the selected vehicle: maker's logo, year, make
   and model, odometer, license plate and VIN (tap any of the last three to
   copy it), plus its service reminders.
-- **Reports.** Average fuel economy, cost per mile (fuel plus service), miles
-  tracked, detailed fuel stats and charts of fuel economy, fuel price and
-  odometer over time.
+- **Reports.** Pick a range (3 months, 6 months, a year or all time) and see
+  distance driven, fuel economy with every tank on a best-to-worst strip,
+  cost of ownership split into fuel and service (total and per mile), and
+  fuel price against its low and high. Trend arrows compare with the
+  previous period, and each card opens a chart.
 - **Import / export.** Import backups from AutoTrack (.csv), Drivvo (.xlsx)
   and Fuelio (.csv). Export one .csv per vehicle with its details and full
   history; it opens in Excel or Sheets and imports back into AutoTrack.
@@ -123,7 +125,7 @@ Store** someday. Ideas planned for the future, with notes on each, are in
 - Manufacturer service schedules that fill in reminders automatically
 - Search across service history
 - Themes: light mode and a "Glovebox notebook" look
-- A redesigned Reports page with service spending and time ranges
+- Vehicle value in Reports (market value over time and per mile)
 - Save-to-folder export
 - Local car events with anonymous RSVP
 
