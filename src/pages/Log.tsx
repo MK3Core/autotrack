@@ -87,34 +87,31 @@ export default function Log() {
     return () => document.removeEventListener('pointerdown', onPointerDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entryState]);
-  const loadedFillups = useLiveQuery<Fillup[]>(
-    () =>
-      selectedVehicleId
-        ? db.fillups.where('vehicleId').equals(selectedVehicleId).toArray()
-        : Promise.resolve([]),
-    [selectedVehicleId],
-  );
-
-  const loadedRecords = useLiveQuery<MaintenanceRecord[]>(
-    () =>
-      selectedVehicleId
-        ? db.maintenance.where('vehicleId').equals(selectedVehicleId).toArray()
-        : Promise.resolve([]),
-    [selectedVehicleId],
-  );
-  const loadedSchedules = useLiveQuery<ServiceSchedule[]>(
-    () =>
-      selectedVehicleId
-        ? db.schedules.where('vehicleId').equals(selectedVehicleId).toArray()
-        : Promise.resolve([]),
-    [selectedVehicleId],
-  );
-  // Undefined until the first read completes. Previous results are kept while
-  // switching vehicles, so this is only true for the instant after launch.
-  const loading = !loadedFillups || !loadedRecords || !loadedSchedules;
-  const fillups = loadedFillups ?? [];
-  const records = loadedRecords ?? [];
-  const schedules = loadedSchedules ?? [];
+  // One read for everything the page shows, tagged with the vehicle it belongs
+  // to. Separate queries resolve at different moments after a vehicle switch,
+  // so for a frame the page would mix one vehicle's schedules with another's
+  // odometer and flash reminders that don't apply. Previous results are kept
+  // until the new snapshot lands, so this is only undefined right after launch.
+  const snapshot = useLiveQuery(async () => {
+    if (!selectedVehicleId) {
+      return { vehicleId: null, fillups: [] as Fillup[], records: [] as MaintenanceRecord[], schedules: [] as ServiceSchedule[] };
+    }
+    return db.transaction('r', db.fillups, db.maintenance, db.schedules, async () => {
+      const [fillups, records, schedules] = await Promise.all([
+        db.fillups.where('vehicleId').equals(selectedVehicleId).toArray() as Promise<Fillup[]>,
+        db.maintenance.where('vehicleId').equals(selectedVehicleId).toArray() as Promise<MaintenanceRecord[]>,
+        db.schedules.where('vehicleId').equals(selectedVehicleId).toArray() as Promise<ServiceSchedule[]>,
+      ]);
+      return { vehicleId: selectedVehicleId, fillups, records, schedules };
+    });
+  }, [selectedVehicleId]);
+  const loading = !snapshot;
+  const fillups = snapshot?.fillups ?? [];
+  const records = snapshot?.records ?? [];
+  const schedules = snapshot?.schedules ?? [];
+  // Everything below describes the snapshot's vehicle, which can trail the
+  // selection by a frame while the new vehicle's data is read.
+  const shownVehicleId = snapshot?.vehicleId ?? null;
   const reminders = computeReminders(schedules, records, latestOdometer(fillups, records));
 
   const timeline: TimelineEntry[] = [
@@ -132,12 +129,12 @@ export default function Log() {
     })),
   ].sort((a, b) => b.date.localeCompare(a.date) || b.odometer - a.odometer);
   const lifetimeStats = computeLifetimeMpgStats(fillups);
-  const u = unitsFor(vehicles.find((v) => v.id === selectedVehicleId));
+  const u = unitsFor(vehicles.find((v) => v.id === shownVehicleId));
 
   const { visibleItems, sentinelRef, hasMore, loadMore } = useInfiniteScroll(
     timeline,
     PAGE_SIZE,
-    selectedVehicleId,
+    shownVehicleId,
   );
 
   const rows: TimelineRow[] = [];

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 /**
  * Progressive reveal for a client-side list: renders `pageSize` items at a
@@ -12,11 +12,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  */
 export function useInfiniteScroll<T>(items: T[], pageSize: number, resetKey?: unknown) {
   const [count, setCount] = useState(pageSize);
+  const [lastResetKey, setLastResetKey] = useState(resetKey);
 
-  useEffect(() => {
+  // Reset during render rather than in an effect, so the new list never paints
+  // a frame at the old list's length before snapping back.
+  let effectiveCount = count;
+  if (resetKey !== lastResetKey) {
+    setLastResetKey(resetKey);
     setCount(pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
+    effectiveCount = pageSize;
+  }
 
   const itemsLengthRef = useRef(items.length);
   itemsLengthRef.current = items.length;
@@ -39,7 +44,7 @@ export function useInfiniteScroll<T>(items: T[], pageSize: number, resetKey?: un
     [pageSize],
   );
 
-  const visibleCount = Math.min(count, items.length);
+  const visibleCount = Math.min(effectiveCount, items.length);
   return {
     visibleItems: items.slice(0, visibleCount),
     sentinelRef,

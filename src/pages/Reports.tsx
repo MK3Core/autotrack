@@ -29,23 +29,27 @@ function formatDateLabel(label: unknown) {
 }
 
 export default function Reports() {
-  const { selectedVehicleId, selectedVehicle } = useVehicles();
-  const fillups = useLiveQuery<Fillup[], Fillup[]>(
-    () =>
-      selectedVehicleId
-        ? db.fillups.where('vehicleId').equals(selectedVehicleId).toArray()
-        : Promise.resolve([]),
-    [selectedVehicleId],
-    [],
-  );
-  const records = useLiveQuery<MaintenanceRecord[], MaintenanceRecord[]>(
-    () =>
-      selectedVehicleId
-        ? db.maintenance.where('vehicleId').equals(selectedVehicleId).toArray()
-        : Promise.resolve([]),
-    [selectedVehicleId],
-    [],
-  );
+  const { vehicles, selectedVehicleId } = useVehicles();
+  // One read tagged with its vehicle, so fillups and service records always
+  // come from the same vehicle; see the matching note in Log.tsx. Previous
+  // results are kept while switching, so this is only undefined on first load.
+  const snapshot = useLiveQuery(async () => {
+    if (!selectedVehicleId) {
+      return { vehicleId: null, fillups: [] as Fillup[], records: [] as MaintenanceRecord[] };
+    }
+    return db.transaction('r', db.fillups, db.maintenance, async () => {
+      const [fillups, records] = await Promise.all([
+        db.fillups.where('vehicleId').equals(selectedVehicleId).toArray() as Promise<Fillup[]>,
+        db.maintenance.where('vehicleId').equals(selectedVehicleId).toArray() as Promise<MaintenanceRecord[]>,
+      ]);
+      return { vehicleId: selectedVehicleId, fillups, records };
+    });
+  }, [selectedVehicleId]);
+  const fillups = snapshot?.fillups ?? [];
+  const records = snapshot?.records ?? [];
+  // Names and units follow the snapshot's vehicle, which can trail the
+  // selection by a frame while the new vehicle's data is read.
+  const selectedVehicle = vehicles.find((v) => v.id === snapshot?.vehicleId) ?? null;
 
   const withMpg = computeMpgSeries(fillups).sort(
     (a, b) => a.date.localeCompare(b.date) || a.odometer - b.odometer,
@@ -66,6 +70,10 @@ export default function Reports() {
   // Quick stats: cost per mile here counts service as well as fuel.
   const quickMpg = computeLifetimeMpgStats(fillups).average;
   const { costPerMile, trackedMiles } = computeTotalCostPerMile(fillups, records);
+
+  // Render nothing until the first read, rather than N/A stats and empty
+  // charts that the real data immediately replaces.
+  if (!snapshot) return null;
 
   return (
     <div>
