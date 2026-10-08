@@ -193,20 +193,87 @@ export function odometerAt(timeline: ReturnType<typeof odometerTimeline>, date: 
 }
 
 /**
- * Distance driven within a period, measured from the odometer estimated on
- * its exact start and end dates. Unlike `periodMiles`, a drive between two
- * fillups that straddles the start is split by days rather than counted
- * whole on one side, so equal periods of steady driving come out equal.
- * Used for the miles trend and chart; the headline stays on logged readings
- * so cost per mile still adds up from what's on screen.
+ * Fuel spending as a running total against the odometer. A fillup pays for
+ * the fuel burned since the one before it, so its cost is spread across the
+ * miles of that stretch: the total climbs in a straight line from one
+ * fillup's reading to the next. The first fillup refills driving from before
+ * tracking began, so its cost lands all at once on its own reading.
  */
-export function estimatedMiles(odometers: OdometerReading[], period: Period): number | null {
-  const timeline = odometerTimeline(odometers);
-  if (!timeline.length) return null;
-  const start = odometerAt(timeline, period.after ?? timeline[0].date);
-  const end = odometerAt(timeline, period.through ?? timeline[timeline.length - 1].date);
-  if (start === null || end === null) return null;
-  return end > start ? end - start : null;
+export function fuelSpendTimeline(
+  fillups: { odometer: number; totalCost?: number }[],
+): { odometer: number; spent: number }[] {
+  const byOdometer = new Map<number, number>();
+  for (const f of fillups) byOdometer.set(f.odometer, (byOdometer.get(f.odometer) ?? 0) + (f.totalCost ?? 0));
+  let spent = 0;
+  return [...byOdometer.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([odometer, cost]) => {
+      spent += cost;
+      return { odometer, spent };
+    });
+}
+
+/** Fuel spent by the time the odometer reads `odometer` (see `fuelSpendTimeline`). */
+export function fuelSpentAt(timeline: ReturnType<typeof fuelSpendTimeline>, odometer: number): number {
+  if (!timeline.length || odometer < timeline[0].odometer) return 0;
+  for (let i = 0; i < timeline.length; i++) {
+    const p = timeline[i];
+    if (p.odometer === odometer) return p.spent;
+    if (p.odometer > odometer) {
+      const prev = timeline[i - 1];
+      return prev.spent + ((p.spent - prev.spent) * (odometer - prev.odometer)) / (p.odometer - prev.odometer);
+    }
+  }
+  return timeline[timeline.length - 1].spent;
+}
+
+/**
+ * Where a period's measurement starts: the odometer estimated on its start
+ * date, or null for an open start (no start date, or a history that only
+ * begins after it, which comes to the same thing) where it runs from the
+ * very first entry.
+ */
+function startOdometer(timeline: ReturnType<typeof odometerTimeline>, period: Period): number | null {
+  if (period.after === null || !timeline.length || period.after < timeline[0].date) return null;
+  return odometerAt(timeline, period.after);
+}
+
+export interface PeriodEstimate {
+  miles: number | null;
+  fuelCost: number;
+  serviceCost: number;
+  totalCost: number;
+  totalPerMile: number | null;
+}
+
+/**
+ * Distance and spending for a period measured from its exact start and end
+ * dates, rather than from whichever fillups happen to fall inside it. A drive
+ * between two fillups that straddles the start is split by days, and so is
+ * the fuel that fillup paid for, so equal periods of steady driving come out
+ * equal. Service visits stay on the day they were paid. Trends and charts use
+ * this; the headline figures stay on logged entries so they match the Log.
+ * With an open start this matches the logged totals exactly.
+ */
+export function estimatePeriod(
+  fillups: { date: string; odometer: number; totalCost?: number }[],
+  records: MaintenanceRecord[],
+  period: Period,
+): PeriodEstimate {
+  const readings = [...fillups, ...records];
+  const timeline = odometerTimeline(readings);
+  const fuel = fuelSpendTimeline(fillups);
+  const serviceCost = sum(records.filter((r) => inPeriod(r.date, period)).map((r) => r.totalCost ?? 0));
+  if (!timeline.length) {
+    return { miles: null, fuelCost: 0, serviceCost, totalCost: serviceCost, totalPerMile: null };
+  }
+  const start = startOdometer(timeline, period);
+  const end = odometerAt(timeline, period.through ?? timeline[timeline.length - 1].date) ?? timeline[timeline.length - 1].odometer;
+  const from = start ?? Math.min(...readings.map((e) => e.odometer));
+  const miles = end > from ? end - from : null;
+  const fuelCost = fuelSpentAt(fuel, end) - (start === null ? 0 : fuelSpentAt(fuel, start));
+  const totalCost = fuelCost + serviceCost;
+  return { miles, fuelCost, serviceCost, totalCost, totalPerMile: miles ? totalCost / miles : null };
 }
 
 function sum(values: number[]) {
@@ -362,27 +429,6 @@ export interface MilesBucket {
   miles: number;
 }
 
-/** Fuel and service spending per bucket across the period's span. */
-export function computeSpendBuckets(
-  series: FillupWithMpg[],
-  records: MaintenanceRecord[],
-  period: Period,
-): { bucket: Bucket; rows: SpendBucket[] } {
-  const fillups = series.filter((f) => inPeriod(f.date, period));
-  const visits = records.filter((r) => inPeriod(r.date, period));
-  const from = earliestEntryDate(fillups, visits);
-  const to = latestEntryDate(fillups, visits);
-  if (!from || !to) return { bucket: 'month', rows: [] };
-  const bucket = bucketFor(from, to);
-  const rows = new Map(bucketKeys(from, to, bucket).map((key) => [key, { key, fuel: 0, service: 0 }]));
-  for (const f of fillups) rows.get(bucketKey(f.date, bucket))!.fuel += f.totalCost ?? 0;
-  for (const r of visits) rows.get(bucketKey(r.date, bucket))!.service += r.totalCost ?? 0;
-  return {
-    bucket,
-    rows: [...rows.values()].map((r) => ({ ...r, fuel: round(r.fuel, 2), service: round(r.service, 2) })),
-  };
-}
-
 /** The last day of a bucket key ("2026-07" -> "2026-07-31"). */
 function bucketEnd(key: string): string {
   const [y, rest] = key.split('-');
@@ -394,37 +440,83 @@ function bucketEnd(key: string): string {
 }
 
 /**
- * Distance per bucket, from the odometer estimated at each bucket's edges
- * (see `estimatedMiles`), so steady driving gives steady bars and the bars
- * add up to the period's distance. The period starts at its own start date
- * when there's a reading on or before it to measure from, otherwise at its
- * first reading.
+ * The buckets a period's chart spans and the date each one ends on (the
+ * last bucket ends with the period). `start` is the start date when there's
+ * a reading on or before it, else null and the chart runs from the first
+ * entry; either way driving after that point lands in the bucket its day
+ * falls in.
  */
-export function computeMilesBuckets(
-  odometers: OdometerReading[],
+function chartBuckets(
+  readings: OdometerReading[],
   period: Period,
-): { bucket: Bucket; rows: MilesBucket[] } {
-  const inside = odometers.filter((e) => inPeriod(e.date, period));
+): { bucket: Bucket; keys: string[]; ends: string[]; timeline: ReturnType<typeof odometerTimeline>; start: number | null } | null {
+  const inside = readings.filter((e) => inPeriod(e.date, period));
   const first = earliestEntryDate(inside, []);
   const last = latestEntryDate(inside, []);
-  if (!first || !last) return { bucket: 'month', rows: [] };
-
-  const timeline = odometerTimeline(odometers);
-  const measuredFromStart = period.after !== null && odometerAt(timeline, period.after) !== null;
-  const start = measuredFromStart ? period.after! : first;
+  if (!first || !last) return null;
+  const timeline = odometerTimeline(readings);
+  const start = startOdometer(timeline, period);
   const end = period.through && odometerAt(timeline, period.through) !== null ? period.through : last;
-  // Driving right after the start date belongs to the bucket that day falls in.
-  const keysFrom = measuredFromStart ? nextDay(start) : first;
+  const keysFrom = start !== null ? nextDay(period.after!) : first;
   const bucket = bucketFor(keysFrom, end);
-
-  // Edges are rounded rather than each bar, so the bars add up exactly.
-  let reached = Math.round(odometerAt(timeline, start)!);
-  const rows = bucketKeys(keysFrom, end, bucket).map((key) => {
+  const keys = bucketKeys(keysFrom, end, bucket);
+  const ends = keys.map((key) => {
     const bucketLast = bucketEnd(key);
-    const odometer = Math.round(odometerAt(timeline, bucketLast < end ? bucketLast : end)!);
+    return bucketLast < end ? bucketLast : end;
+  });
+  return { bucket, keys, ends, timeline, start };
+}
+
+/**
+ * Distance per bucket, from the odometer estimated at each bucket's edges
+ * (see `estimatePeriod`), so steady driving gives steady bars and the bars
+ * add up to the period's estimated distance.
+ */
+export function computeMilesBuckets(
+  readings: OdometerReading[],
+  period: Period,
+): { bucket: Bucket; rows: MilesBucket[] } {
+  const chart = chartBuckets(readings, period);
+  if (!chart) return { bucket: 'month', rows: [] };
+  // Edges are rounded rather than each bar, so the bars add up exactly.
+  let reached = Math.round(chart.start ?? Math.min(...readings.map((e) => e.odometer)));
+  const rows = chart.keys.map((key, i) => {
+    const odometer = Math.round(odometerAt(chart.timeline, chart.ends[i])!);
     const miles = Math.max(0, odometer - reached);
     reached = Math.max(reached, odometer);
     return { key, miles };
   });
-  return { bucket, rows };
+  return { bucket: chart.bucket, rows };
+}
+
+/**
+ * Fuel and service spending per bucket. Fuel follows the miles it paid for
+ * (see `estimatePeriod`), so steady driving gives steady fuel bars; service
+ * stays in the bucket of the day it was paid.
+ */
+export function computeSpendBuckets(
+  series: FillupWithMpg[],
+  records: MaintenanceRecord[],
+  period: Period,
+): { bucket: Bucket; rows: SpendBucket[] } {
+  const chart = chartBuckets([...series, ...records], period);
+  if (!chart) return { bucket: 'month', rows: [] };
+  const fuel = fuelSpendTimeline(series);
+  // Running totals are rounded to the cent rather than each bar, so the bars add up exactly.
+  const cents = (n: number) => Math.round(n * 100);
+  let reached = chart.start === null ? 0 : cents(fuelSpentAt(fuel, chart.start));
+  const rows = new Map(
+    chart.keys.map((key, i) => {
+      const spent = cents(fuelSpentAt(fuel, odometerAt(chart.timeline, chart.ends[i])!));
+      const row = { key, fuel: Math.max(0, spent - reached) / 100, service: 0 };
+      reached = Math.max(reached, spent);
+      return [key, row];
+    }),
+  );
+  for (const r of records) {
+    if (!inPeriod(r.date, period)) continue;
+    const row = rows.get(bucketKey(r.date, chart.bucket));
+    if (row) row.service = round(row.service + (r.totalCost ?? 0), 2);
+  }
+  return { bucket: chart.bucket, rows: [...rows.values()] };
 }

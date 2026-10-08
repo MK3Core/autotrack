@@ -442,25 +442,19 @@ visual pieces in `src/components/ReportViz.tsx`.
   means 6 months of history for 3M and All, a year for 6M, 2 years for 1Y.
   Until then each trend chip shows a dim dash and the caption says when
   trends start (v0.4.2).
-- The miles trend and Miles over time chart estimate the odometer on each
-  range's exact edge dates (a straight line between the readings either
-  side), so a drive that straddles an edge is split by days instead of
-  counted whole on one side (v0.4.3; steady driving trended up to 25% before).
-  The Tracked headline stays on logged readings so cost per mile still adds
-  up from what's on screen. Unlogged stretches are assumed to be driven
-  evenly.
-- Known noise: total cost still only changes at fillups, so it can trend a
-  few percent on short ranges even with steady driving. Calendar ranges also
-  differ slightly in length (92 vs. 90 days), worth about 2% on 3M.
-- Cards: Driving (distance, fillups, volume), Fuel economy (average, every
-  tank on a worst-to-best strip), Cost of ownership (total and per distance,
-  split into fuel and service), Fuel price (average, low/high range bar with
-  the latest price). Each opens a chart behind a tap.
-- The old cost-per-mile mismatch is gone: every per-distance figure divides by
-  the same distance (fillups and service visits), so fuel + service per mile
-  adds up to the total.
-- Dropped: "Mean MPG" (each tank truncated to a whole number first) and the
-  odometer-over-time chart, replaced by distance per month.
+- Trends and charts measure each period from its exact start and end dates
+  instead of from whichever fillups fall inside it (v0.4.3 miles, v0.4.4
+  spending). The odometer on an edge date is a straight line between the
+  readings either side, and a fillup's cost is spread across the miles it
+  paid for (the stretch since the previous fillup). Service stays on the day
+  it was paid. Miles, total cost and cost per mile trends all use these
+  estimates, so they agree with each other; steady driving trends within
+  about 1% on every range (it was up to 25%). The headline figures stay on
+  logged entries so they match the Log; on All time the two are identical,
+  and on fixed ranges the charts say when bars may differ from the totals.
+  Unlogged stretches are assumed to be driven evenly.
+- Calendar ranges differ slightly in length (92 vs. 90 days), worth about
+  1-2% on 3M.
 
 Still open:
 

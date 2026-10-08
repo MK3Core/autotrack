@@ -10,11 +10,13 @@ import {
   computePeriodStats,
   computeSpendBuckets,
   earliestEntryDate,
-  estimatedMiles,
+  estimatePeriod,
   inPeriod,
   latestEntryDate,
   rangePeriods,
   trendHistoryMonths,
+  type Bucket,
+  type PeriodEstimate,
   type PeriodStats,
   type ReportRange,
 } from '../lib/reports';
@@ -50,6 +52,21 @@ function StripEnd({ label, value, meta, align }: { label: string; value: string;
       <span className="strip-end__value">{value}</span>
       <span className="strip-end__meta">{meta}</span>
     </div>
+  );
+}
+
+/**
+ * Above a chart: its bucket size when not monthly, and a heads-up when the
+ * bars (spread across the days driven) don't add up to the totals shown.
+ */
+function ChartNote({ bucket, spread }: { bucket: Bucket; spread: boolean }) {
+  if (bucket === 'month' && !spread) return null;
+  return (
+    <p className="reports__chart-note">
+      {bucket !== 'month' && `By ${bucket}`}
+      {bucket !== 'month' && spread && ' · '}
+      {spread && 'Spread by day, so may differ slightly from totals'}
+    </p>
   );
 }
 
@@ -112,14 +129,19 @@ export default function Reports() {
 
   const mpgTrend = trend((p) => p.avgMpg, (p) => p.tanks.length >= MIN_TREND_SAMPLES);
   const priceTrend = trend((p) => p.avgPrice, enoughFillups);
-  const costPerMileTrend = trend((p) => p.totalPerMile, enoughFillups);
-  // Miles trend from the odometer estimated on each period's exact edges, so a
-  // drive that straddles the boundary is split instead of counted whole.
-  const milesTrend =
-    prev && periods.previous && enoughFillups(recent) && enoughFillups(prev)
-      ? change(estimatedMiles(odometers, periods.recent), estimatedMiles(odometers, periods.previous))
-      : null;
-  const totalCostTrend = trend((p) => p.totalCost, enoughFillups);
+  // Distance and spending trends compare estimates for each period's exact
+  // dates, so a fillup that falls just inside or outside an edge doesn't swing
+  // them. All three use the same estimates, so they agree with each other
+  // (miles and total both up 10% reads as cost per mile steady).
+  const estRecent = estimatePeriod(fillups, records, periods.recent);
+  const estPrev = periods.previous ? estimatePeriod(fillups, records, periods.previous) : null;
+  function estimateTrend(pick: (e: PeriodEstimate) => number | null) {
+    if (!prev || !estPrev || !enoughFillups(recent) || !enoughFillups(prev)) return null;
+    return change(pick(estRecent), pick(estPrev));
+  }
+  const milesTrend = estimateTrend((e) => e.miles);
+  const totalCostTrend = estimateTrend((e) => e.totalCost);
+  const costPerMileTrend = estimateTrend((e) => e.totalPerMile);
 
   // From the range's start, or the first entry when the history is shorter.
   const from = periods.current.after && first && periods.current.after > first ? periods.current.after : first;
@@ -172,9 +194,10 @@ export default function Reports() {
           s.miles !== null
             ? () => {
                 const { bucket, rows } = computeMilesBuckets(odometers, periods.current);
+                const charted = rows.reduce((a, r) => a + r.miles, 0);
                 return (
                   <div className="reports__chart">
-                    {bucket !== 'month' && <p className="reports__chart-note">By {bucket}</p>}
+                    <ChartNote bucket={bucket} spread={charted !== s.miles} />
                     <MilesChart rows={rows} label={bucketLabel} unit={u.dist} />
                   </div>
                 );
@@ -273,9 +296,10 @@ export default function Reports() {
         detailLabel="Spending over time"
         detail={() => {
           const { bucket, rows } = computeSpendBuckets(series, records, periods.current);
+          const charted = rows.reduce((a, r) => a + r.fuel, 0);
           return (
             <div className="reports__chart">
-              {bucket !== 'month' && <p className="reports__chart-note">By {bucket}</p>}
+              <ChartNote bucket={bucket} spread={Math.abs(charted - s.fuelCost) >= 0.01} />
               <SpendChart rows={rows} label={bucketLabel} />
             </div>
           );
