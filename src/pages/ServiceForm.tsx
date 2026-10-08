@@ -188,7 +188,7 @@ export default function ServiceForm() {
       const intervalMiles = parseFloat(l.miles) > 0 ? parseFloat(l.miles) : undefined;
       const intervalMonths = parseFloat(l.months) > 0 ? Math.round(parseFloat(l.months)) : undefined;
       if (!intervalMiles && !intervalMonths) {
-        return alert(`Set a mileage and/or month interval for "${lineName(l)}", or switch it to one-time.`);
+        return alert(`Set an interval for "${lineName(l)}", or make it one-time.`);
       }
       choices.push({ serviceName: lineName(l), repeat: { intervalMiles, intervalMonths } });
     }
@@ -282,7 +282,7 @@ export default function ServiceForm() {
                 </label>
               )}
               <label>
-                Cost for this service ($, optional)
+                Cost ($)
                 <input
                   type="number"
                   inputMode="decimal"
@@ -333,7 +333,6 @@ export default function ServiceForm() {
                       placeholder="12"
                     />
                   </label>
-                  <p className="service-line__hint">Whichever comes first, if you set both.</p>
                 </div>
               )}
 
@@ -363,9 +362,6 @@ export default function ServiceForm() {
             onChange={(e) => setTotalCost(e.target.value)}
             placeholder={itemizedTotal > 0 ? itemizedTotal.toFixed(2) : undefined}
           />
-          {itemizedTotal > 0 && totalCost === '' && (
-            <span className="service-form__hint">Left blank, this saves as the itemized sum.</span>
-          )}
         </label>
 
         <label>

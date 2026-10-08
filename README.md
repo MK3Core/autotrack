@@ -27,8 +27,8 @@ no account, server or internet connection.
   distance driven, fuel economy with every tank on a worst-to-best strip,
   cost of ownership split into fuel and service (total and per mile), and
   fuel price against its low and high. Trend arrows compare with the
-  previous period (on all time, the second half of your history against
-  the first) once there's enough history to compare, and each card opens a
+  previous period (on all time, the last full calendar quarter against the
+  one before) once there's enough history to compare, and each card shows a
   chart of distance, fuel economy, spending or price over time.
 - **Import / export.** Import backups from AutoTrack (.csv), Drivvo (.xlsx)
   and Fuelio (.csv). Export one .csv per vehicle with its details and full
@@ -105,8 +105,8 @@ a signed release APK and publishes it as a GitHub Release (the version name
 comes from the tag):
 
 ```sh
-git tag v0.4.4
-git push origin v0.4.4
+git tag v0.4.5
+git push origin v0.4.5
 ```
 
 Signing uses the repository secrets `ANDROID_KEYSTORE_BASE64`,

@@ -441,7 +441,7 @@ Layout (v0.4.0):
   tank on a worst-to-best strip with the latest tank and the average
   marked), Cost of ownership (total and per distance, split into fuel and
   service), Fuel price (average, low/high range bar with the latest price).
-  Each opens a chart behind a tap.
+  Each shows its chart right under the figures (v0.4.5; was behind a tap).
 - The old cost-per-mile mismatch is gone: every per-distance figure divides by
   the same distance (fillups and service visits), so fuel + service per mile
   adds up to the total.
@@ -451,12 +451,15 @@ Layout (v0.4.0):
 Trends:
 
 - Each trend chip compares a range with the equal-length stretch before it.
-  "All" splits the vehicle's history into two equal halves by date and
-  compares the second with the first (v0.4.1; it was last 3 months vs.
-  earlier, which let a handful of tanks decide a lifetime trend).
+  "All" compares the last complete calendar quarter with the one before
+  (e.g. Q3 '26 vs. Q2 '26; v0.4.5). A rolling quarter would just repeat 3M. Before
+  that it split the history into two equal halves, which was hard to read,
+  and before that it was last 3 months vs. everything earlier, which let a
+  handful of tanks decide a lifetime trend.
 - Trends wait for a full earlier period: a reading on or before the start of
   the comparison side, so both sides measure distance the same way. That
-  means 6 months of history for 3M and All, a year for 6M, 2 years for 1Y.
+  means 6 months of history for 3M, a year for 6M, 2 years for 1Y, and two
+  full calendar quarters for All.
   Until then each chip shows a dim dash and the caption says when trends
   start; the caption's dates begin at the first entry when the history is
   shorter than the range (v0.4.2).
@@ -470,8 +473,8 @@ Trends:
   steady driving trends within about 1% on every range (it was up to 25%).
   Unlogged stretches are assumed to be driven evenly.
 - Headline figures stay on logged entries so they match the Log. On All time
-  the estimates are identical to them; on fixed ranges a chart note says
-  when its bars may differ from the totals.
+  the estimates are identical to them; on fixed ranges the chart bars may
+  differ slightly from the totals (no note, to keep text minimal).
 - Known noise: calendar ranges differ slightly in length (92 vs. 90 days),
   worth about 1-2% on 3M.
 

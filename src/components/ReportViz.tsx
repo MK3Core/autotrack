@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
   Bar,
   BarChart,
@@ -69,12 +69,11 @@ export function Trend({
   );
 }
 
-// ---- Expandable card --------------------------------------------------------
+// ---- Report card ----------------------------------------------------------
 
 /**
- * A report card: the key figures always show, the chart sits behind a tap.
- * The chart only mounts on first open (charts are the expensive part), then
- * stays mounted so closing can animate.
+ * A report card: the key figures up top, then the chart under a small
+ * caption naming it.
  */
 export function ReportCard({
   title,
@@ -87,32 +86,15 @@ export function ReportCard({
   detailLabel: string;
   detail?: () => ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   return (
     <section className="card report-card">
       <h3 className="report-card__title">{title}</h3>
       {children}
       {detail && (
-        <>
-          <div className={`report-card__detail ${open ? 'is-open' : ''}`} inert={!open}>
-            <div className="report-card__detail-inner">{mounted && detail()}</div>
-          </div>
-          <button
-            type="button"
-            className="report-card__toggle"
-            aria-expanded={open}
-            onClick={() => {
-              setMounted(true);
-              setOpen((o) => !o);
-            }}
-          >
-            {open ? 'Hide' : detailLabel}
-            <span className={`report-card__chevron ${open ? 'is-open' : ''}`} aria-hidden="true">
-              ▾
-            </span>
-          </button>
-        </>
+        <div className="report-card__detail">
+          <h4 className="report-card__detail-label">{detailLabel}</h4>
+          {detail()}
+        </div>
       )}
     </section>
   );

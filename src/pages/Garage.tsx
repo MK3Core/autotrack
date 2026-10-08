@@ -167,7 +167,7 @@ export default function Garage() {
   async function handleDelete(v: Vehicle) {
     const count = await db.fillups.where('vehicleId').equals(v.id).count();
     const serviceCount = await db.maintenance.where('vehicleId').equals(v.id).count();
-    if (!confirm(`Delete "${v.name}"? This will also delete ${count} logged fillup(s) and ${serviceCount} service record(s).`)) return;
+    if (!confirm(`Delete "${v.name}" with its ${count} fillup(s) and ${serviceCount} service(s)?`)) return;
     await db.fillups.where('vehicleId').equals(v.id).delete();
     await deleteVehicleMaintenance(v.id);
     await db.vehicles.delete(v.id);
@@ -179,7 +179,7 @@ export default function Garage() {
     return (
       <div>
         <h2>{editingVehicle ? 'Edit Vehicle' : 'New Vehicle'}</h2>
-        {!vehicles.length && !editing && <p className="garage__hint">Add your first vehicle to start tracking it.</p>}
+        {!vehicles.length && !editing && <p className="garage__hint">Add your first vehicle.</p>}
         <form className="vehicle-form" onSubmit={handleSubmit}>
           <label>
             Name

@@ -29,10 +29,6 @@
   min-width: 0;
 }
 
-.service-form__hint {
-  font-size: 0.78rem;
-}
-
 .service-form__lines {
   display: flex;
   flex-direction: column;
@@ -89,13 +85,6 @@
 .service-line__or {
   color: var(--text-dim);
   padding-bottom: 0.7rem;
-}
-
-.service-line__hint {
-  flex-basis: 100%;
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--text-dim);
 }
 
 .service-line__remove {

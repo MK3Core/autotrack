@@ -13,6 +13,7 @@ import {
   estimatePeriod,
   inPeriod,
   latestEntryDate,
+  quarterLabel,
   rangePeriods,
   trendHistoryMonths,
   type Bucket,
@@ -39,7 +40,7 @@ const RANGES: { value: ReportRange; label: string; against: string }[] = [
   { value: '3m', label: '3M', against: 'previous 3 months' },
   { value: '6m', label: '6M', against: 'previous 6 months' },
   { value: '1y', label: '1Y', against: 'previous year' },
-  { value: 'all', label: 'All', against: 'first half' },
+  { value: 'all', label: 'All', against: 'previous quarter' },
 ];
 
 /** Trends need a couple of data points on both sides, or one odd tank decides them. */
@@ -55,19 +56,10 @@ function StripEnd({ label, value, meta, align }: { label: string; value: string;
   );
 }
 
-/**
- * Above a chart: its bucket size when not monthly, and a heads-up when the
- * bars (spread across the days driven) don't add up to the totals shown.
- */
-function ChartNote({ bucket, spread }: { bucket: Bucket; spread: boolean }) {
-  if (bucket === 'month' && !spread) return null;
-  return (
-    <p className="reports__chart-note">
-      {bucket !== 'month' && `By ${bucket}`}
-      {bucket !== 'month' && spread && ' · '}
-      {spread && 'Spread by day, so may differ slightly from totals'}
-    </p>
-  );
+/** Above a chart: its bucket size, when not monthly. */
+function ChartNote({ bucket }: { bucket: Bucket }) {
+  if (bucket === 'month') return null;
+  return <p className="reports__chart-note">By {bucket}</p>;
 }
 
 export default function Reports() {
@@ -104,7 +96,7 @@ export default function Reports() {
       <div className="reports">
         <h2>Reports</h2>
         <p className="reports__empty">
-          {selectedVehicle ? 'Log a few fillups and your reports will show up here.' : 'Add a vehicle to see reports.'}
+          {selectedVehicle ? 'Log fillups to see reports.' : 'Add a vehicle to see reports.'}
         </p>
       </div>
     );
@@ -117,7 +109,11 @@ export default function Reports() {
   const s = computePeriodStats(series, records, periods.current);
   const recent = range === 'all' ? computePeriodStats(series, records, periods.recent) : s;
   const prev = periods.previous ? computePeriodStats(series, records, periods.previous) : null;
-  const against = RANGES.find((r) => r.value === range)!.against;
+  // "All" names its quarters, so the chips and note say exactly what's compared.
+  const against =
+    range === 'all' && periods.previous
+      ? quarterLabel(periods.previous.through!)
+      : RANGES.find((r) => r.value === range)!.against;
   const odometers = [...fillups, ...records];
 
   /** A trend between the recent and previous periods, when both have enough to compare. */
@@ -145,12 +141,14 @@ export default function Reports() {
 
   // From the range's start, or the first entry when the history is shorter.
   const from = periods.current.after && first && periods.current.after > first ? periods.current.after : first;
-  const historyNeeded = trendHistoryMonths(range);
+  const historyNeeded = range === 'all' ? null : trendHistoryMonths(range);
   const trendNote = prev
     ? range === 'all'
-      ? `Trends: since ${shortDate(periods.recent.after!, true)} vs. before`
+      ? `Trends: ${quarterLabel(periods.recent.through!)} vs. ${against}`
       : `Trends vs. ${against}`
-    : `Trends start after ${historyNeeded % 12 ? `${historyNeeded} months` : historyNeeded === 12 ? 'a year' : `${historyNeeded / 12} years`} of history`;
+    : historyNeeded === null
+      ? 'Trends after 2 full quarters'
+      : `Trends after ${historyNeeded % 12 ? `${historyNeeded} months` : historyNeeded === 12 ? 'a year' : `${historyNeeded / 12} years`}`;
   const caption = from && anchor ? `${shortDate(from, true)} – ${shortDate(anchor, true)}` : '';
 
   const hasMpg = s.avgMpg !== null;
@@ -194,10 +192,9 @@ export default function Reports() {
           s.miles !== null
             ? () => {
                 const { bucket, rows } = computeMilesBuckets(odometers, periods.current);
-                const charted = rows.reduce((a, r) => a + r.miles, 0);
                 return (
                   <div className="reports__chart">
-                    <ChartNote bucket={bucket} spread={charted !== s.miles} />
+                    <ChartNote bucket={bucket} />
                     <MilesChart rows={rows} label={bucketLabel} unit={u.dist} />
                   </div>
                 );
@@ -225,7 +222,7 @@ export default function Reports() {
           </div>
         </div>
         {s.avgDaysBetweenFillups !== null && (
-          <p className="reports__aside">Fills up about every {Math.round(s.avgDaysBetweenFillups)} days</p>
+          <p className="reports__aside">Fills up every ~{Math.round(s.avgDaysBetweenFillups)} days</p>
         )}
       </ReportCard>
 
@@ -280,12 +277,11 @@ export default function Reports() {
             ) : null}
           </>
         ) : (
-          <p className="reports__empty">Needs two full-tank fillups in this range to work out {u.economy}.</p>
+          <p className="reports__empty">Needs two full tanks.</p>
         )}
         {s.excludedOutliers > 0 && (
           <p className="reports__outlier-note">
-            {s.excludedOutliers} tank{s.excludedOutliers === 1 ? '' : 's'} left out as outliers, likely missed
-            fillups. Check the flags in the Log.
+            {s.excludedOutliers} outlier tank{s.excludedOutliers === 1 ? '' : 's'} excluded
           </p>
         )}
       </ReportCard>
@@ -296,10 +292,9 @@ export default function Reports() {
         detailLabel="Spending over time"
         detail={() => {
           const { bucket, rows } = computeSpendBuckets(series, records, periods.current);
-          const charted = rows.reduce((a, r) => a + r.fuel, 0);
           return (
             <div className="reports__chart">
-              <ChartNote bucket={bucket} spread={Math.abs(charted - s.fuelCost) >= 0.01} />
+              <ChartNote bucket={bucket} />
               <SpendChart rows={rows} label={bucketLabel} />
             </div>
           );

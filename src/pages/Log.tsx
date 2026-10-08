@@ -165,7 +165,6 @@ export default function Log() {
     return (
       <div className="card">
         <h2>Welcome to AutoTrack</h2>
-        <p>Add your first vehicle to start logging fillups.</p>
         <Link to="/garage" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>
           Add a Vehicle
         </Link>
@@ -176,7 +175,7 @@ export default function Log() {
   return (
     <div>
       <h2>Log</h2>
-      {timeline.length === 0 && <p>No fillups or services logged yet.</p>}
+      {timeline.length === 0 && <p>Nothing logged yet.</p>}
 
       <div className="timeline">
         <div className="entry-group">
@@ -277,7 +276,7 @@ export default function Log() {
                   {row.mode === 'confirmed' ? (
                     <>
                       <strong className="ghost-card__title">Missed fillup</strong>
-                      <span className="ghost-card__label">{u.economy} restarts after this gap</span>
+                      <span className="ghost-card__label">{u.economy} restarts here</span>
                     </>
                   ) : (
                     <>

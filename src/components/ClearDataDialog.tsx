@@ -92,9 +92,8 @@ export default function ClearDataDialog({ vehicleCount, fillupCount, onCancel, o
         </div>
         <h3 id="clear-dialog-title">Clear all data?</h3>
         <p>
-          This permanently deletes <strong>{vehicleCount}</strong> vehicle{vehicleCount === 1 ? '' : 's'} and{' '}
-          <strong>{fillupCount}</strong> fillup{fillupCount === 1 ? '' : 's'}, along with all service
-          records and repeating services. It can&apos;t be undone.
+          <strong>{vehicleCount}</strong> vehicle{vehicleCount === 1 ? '' : 's'},{' '}
+          <strong>{fillupCount}</strong> fillup{fillupCount === 1 ? '' : 's'} and all services. Can&apos;t be undone.
         </p>
 
         <button
@@ -121,7 +120,7 @@ export default function ClearDataDialog({ vehicleCount, fillupCount, onCancel, o
         >
           <span className="clear-dialog__hold-fill" style={{ width: `${pct}%` }} />
           <span className="clear-dialog__hold-label">
-            {busy ? 'Clearing…' : pct > 0 ? 'Keep holding…' : 'Press and hold to delete everything'}
+            {busy ? 'Clearing…' : pct > 0 ? 'Keep holding…' : 'Hold to delete everything'}
           </span>
         </button>
 

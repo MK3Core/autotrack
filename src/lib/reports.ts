@@ -74,31 +74,42 @@ export function earliestEntryDate(fillups: { date: string }[], records: { date: 
   return earliest;
 }
 
-/** The calendar day halfway between two dates. */
-export function midpointDate(from: string, to: string): string {
-  const mid = (Date.parse(from) + Date.parse(to)) / 2;
-  return new Date(mid).toISOString().slice(0, 10);
+/** The day before a date. */
+function prevDay(date: string): string {
+  return new Date(Date.parse(date) - 86_400_000).toISOString().slice(0, 10);
 }
 
-/** "All" needs this much history before it trends, so each half covers at least the shortest fixed range. */
-export const ALL_TREND_MIN_MONTHS = 2 * RANGE_MONTHS['3m'];
+/** The first day of the calendar quarter a date falls in. */
+function quarterStart(date: string): string {
+  const [y, m] = date.split('-').map(Number);
+  return `${y}-${String(Math.floor((m - 1) / 3) * 3 + 1).padStart(2, '0')}-01`;
+}
 
-/** Months of history a range needs before it can show trends. */
-export function trendHistoryMonths(range: ReportRange): number {
-  return range === 'all' ? ALL_TREND_MIN_MONTHS : 2 * RANGE_MONTHS[range];
+/** The calendar quarter starting on `start`, as a period. */
+function quarterPeriod(start: string): Period {
+  return { after: prevDay(start), through: prevDay(addMonths(start, 3)) };
+}
+
+/** "Q3 '26" for the quarter a date falls in. */
+export function quarterLabel(date: string): string {
+  return bucketLabel(bucketKey(date, 'quarter'));
+}
+
+/** Months of history a fixed range needs before it can show trends. */
+export function trendHistoryMonths(range: Exclude<ReportRange, 'all'>): number {
+  return 2 * RANGE_MONTHS[range];
 }
 
 /**
  * The period a range covers and the two sides of its trend comparison. A
  * fixed range compares with the equal-length stretch just before it. "All"
- * has nothing before it, so it splits itself into two equal halves by date
- * and compares the second with the first.
+ * has nothing before it, so it compares the last complete calendar quarter
+ * with the one before (a rolling quarter would just repeat the 3M trends).
  *
  * `previous` is null until the history fully covers it, i.e. there's a
  * reading on or before its start to measure distance from. Without one, that
  * side loses the miles before its first entry but keeps that fillup's cost,
- * and a half-empty window makes totals look like they jumped. For "All" the
- * very first entry is that reading, so the first half starts just after it.
+ * and a half-empty window makes totals look like they jumped.
  */
 export function rangePeriods(range: ReportRange, first: string | null, anchor: string | null): {
   current: Period;
@@ -108,12 +119,15 @@ export function rangePeriods(range: ReportRange, first: string | null, anchor: s
 } {
   const all: Period = { after: null, through: null };
   if (!first || !anchor) return { current: all, recent: all, previous: null };
-  const covered = addMonths(first, trendHistoryMonths(range)) <= anchor;
   if (range === 'all') {
-    if (!covered) return { current: all, recent: all, previous: null };
-    const mid = midpointDate(first, anchor);
-    return { current: all, recent: { after: mid, through: anchor }, previous: { after: first, through: mid } };
+    // The quarter the newest entry is in counts once its last day is reached.
+    const thisQuarter = quarterStart(anchor);
+    const recentStart = quarterPeriod(thisQuarter).through === anchor ? thisQuarter : addMonths(thisQuarter, -3);
+    const previous = quarterPeriod(addMonths(recentStart, -3));
+    if (first > previous.after!) return { current: all, recent: all, previous: null };
+    return { current: all, recent: quarterPeriod(recentStart), previous };
   }
+  const covered = addMonths(first, trendHistoryMonths(range)) <= anchor;
   const months = RANGE_MONTHS[range];
   const start = addMonths(anchor, -months);
   const recent: Period = { after: start, through: anchor };

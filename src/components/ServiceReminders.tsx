@@ -46,7 +46,7 @@ export default function ServiceReminders({ vehicle }: { vehicle: Vehicle }) {
   const currentOdometer = latestOdometer(fillups, records);
 
   async function stopRepeating(s: ServiceSchedule) {
-    if (!confirm(`Stop repeating "${s.serviceName}"? Past records are kept; reminders will stop.`)) return;
+    if (!confirm(`Stop repeating "${s.serviceName}"? Past records stay.`)) return;
     await db.schedules.delete(s.id);
   }
 
@@ -55,7 +55,7 @@ export default function ServiceReminders({ vehicle }: { vehicle: Vehicle }) {
       <h4>Service Reminders</h4>
       {schedules.length === 0 && (
         <p className="service-reminders__empty">
-          None yet. Choose Repeat when you add a service and it will be tracked here.
+          None. Set Repeat on a service.
         </p>
       )}
       <ul className="service-reminders__list">

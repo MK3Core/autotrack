@@ -35,8 +35,8 @@ export default function ImportExport() {
       ) {
         setError(
           result.skippedRows > 0
-            ? `Nothing was imported. Found ${result.skippedRows} row${result.skippedRows === 1 ? '' : 's'} of data, but none matched a supported format (missing odometer or vehicle name). Double-check this file is a CSV/XLSX export from one of the apps above.`
-            : "Nothing was imported. This file doesn't look like a supported format: no recognizable data rows were found in it.",
+            ? 'Nothing imported: no rows had an odometer and vehicle name.'
+            : 'Nothing imported: unrecognized file.',
         );
       } else {
         setSummary(result);
@@ -64,16 +64,7 @@ export default function ImportExport() {
 
       <div className="card data-section">
         <h3>Import</h3>
-        <p className="data-section__compat-intro">Importer supports the following backup file types from apps:</p>
-        <ul className="data-section__compat-list">
-          <li>AutoTrack (.csv)</li>
-          <li>Drivvo (.xlsx)</li>
-          <li>Fuelio (.csv)</li>
-        </ul>
-        <p>
-          Vehicle details, fillups and services are recognized automatically from any of the above. Vehicles are
-          matched by name; new ones are created as needed. Nothing is deleted or overwritten by an import.
-        </p>
+        <p>AutoTrack, Drivvo or Fuelio backups. Never overwrites.</p>
         <input ref={fileInput} type="file" accept=".csv,.xlsx,.xls" onChange={handleFile} disabled={busy} />
         {busy && <p>Importing…</p>}
         {error && <p className="data-section__error">{error}</p>}
@@ -84,17 +75,14 @@ export default function ImportExport() {
             <li>Fillups added: {summary.fillupsAdded}</li>
             <li>Service records added: {summary.maintenanceAdded}</li>
             {summary.schedulesAdded > 0 && <li>Repeating services added: {summary.schedulesAdded}</li>}
-            {summary.skippedRows > 0 && <li>Rows skipped (missing odometer/name): {summary.skippedRows}</li>}
+            {summary.skippedRows > 0 && <li>Rows skipped: {summary.skippedRows}</li>}
           </ul>
         )}
       </div>
 
       <div className="card data-section">
         <h3>Export</h3>
-        <p>
-          One .csv file per vehicle: its details on the first lines, then its full fillup and service history (including repeating services) below.
-          Opens fine in Excel/Sheets, and can be dropped back into Import above to restore it.
-        </p>
+        <p>One .csv per vehicle. Re-importable.</p>
         {vehicles.length === 0 && <p>No vehicles yet.</p>}
         <ul className="data-section__vehicle-list">
           {vehicles.map((v) => (
@@ -110,10 +98,7 @@ export default function ImportExport() {
 
       <div className="card data-section data-section--danger">
         <h3>Clear data</h3>
-        <p>
-          Permanently deletes all vehicles, fillups and service records so you can start fresh. Export anything you want
-          to keep first.
-        </p>
+        <p>Deletes everything. Can&apos;t be undone.</p>
         <button
           className="btn-danger"
           disabled={vehicles.length === 0 && fillupCount === 0}
