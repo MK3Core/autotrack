@@ -428,33 +428,52 @@ Still open:
 
 ## Reports page redesign
 
-Done: `src/pages/Reports.tsx`, with the stats in `src/lib/reports.ts` and the
-visual pieces in `src/components/ReportViz.tsx`.
+Done in v0.4.0 through v0.4.4: `src/pages/Reports.tsx`, with the stats in
+`src/lib/reports.ts`, the visual pieces in `src/components/ReportViz.tsx`
+and number formats and chart colors in `src/lib/reportFormat.ts`.
+
+Layout (v0.4.0):
 
 - A range picker (3M, 6M, 1Y, All) scopes the whole page. Ranges end on the
-  vehicle's newest entry, not today, so a parked or sold car still shows data.
-- Trend chips compare a range with the equal-length stretch before it. "All"
-  splits the vehicle's history into two equal halves by date and compares
-  the second with the first (v0.4.1; it was last 3 months vs. earlier, which
-  let a handful of tanks decide a lifetime trend).
-- Trends wait for a full earlier period: a reading on or before the start
-  of the comparison side, so both sides measure distance the same way. That
+  vehicle's newest entry, not today, so a parked or sold car still shows
+  data. Every range is always offered, however short the history.
+- Cards: Driving (distance, fillups, volume), Fuel economy (average, every
+  tank on a worst-to-best strip with the latest tank and the average
+  marked), Cost of ownership (total and per distance, split into fuel and
+  service), Fuel price (average, low/high range bar with the latest price).
+  Each opens a chart behind a tap.
+- The old cost-per-mile mismatch is gone: every per-distance figure divides by
+  the same distance (fillups and service visits), so fuel + service per mile
+  adds up to the total.
+- Dropped: "Mean MPG" (each tank truncated to a whole number first) and the
+  odometer-over-time chart, replaced by distance over time.
+
+Trends:
+
+- Each trend chip compares a range with the equal-length stretch before it.
+  "All" splits the vehicle's history into two equal halves by date and
+  compares the second with the first (v0.4.1; it was last 3 months vs.
+  earlier, which let a handful of tanks decide a lifetime trend).
+- Trends wait for a full earlier period: a reading on or before the start of
+  the comparison side, so both sides measure distance the same way. That
   means 6 months of history for 3M and All, a year for 6M, 2 years for 1Y.
-  Until then each trend chip shows a dim dash and the caption says when
-  trends start (v0.4.2).
-- Trends and charts measure each period from its exact start and end dates
-  instead of from whichever fillups fall inside it (v0.4.3 miles, v0.4.4
-  spending). The odometer on an edge date is a straight line between the
-  readings either side, and a fillup's cost is spread across the miles it
-  paid for (the stretch since the previous fillup). Service stays on the day
-  it was paid. Miles, total cost and cost per mile trends all use these
-  estimates, so they agree with each other; steady driving trends within
-  about 1% on every range (it was up to 25%). The headline figures stay on
-  logged entries so they match the Log; on All time the two are identical,
-  and on fixed ranges the charts say when bars may differ from the totals.
+  Until then each chip shows a dim dash and the caption says when trends
+  start; the caption's dates begin at the first entry when the history is
+  shorter than the range (v0.4.2).
+- Distance and spending trends and charts measure each period from its exact
+  start and end dates instead of from whichever fillups fall inside it
+  (v0.4.3 miles, v0.4.4 spending). The odometer on an edge date is a
+  straight line between the readings either side, and a fillup's cost is
+  spread across the miles it paid for (the stretch since the previous
+  fillup). Service stays on the day it was paid. Miles, total cost and cost
+  per mile trends all use these estimates, so they agree with each other;
+  steady driving trends within about 1% on every range (it was up to 25%).
   Unlogged stretches are assumed to be driven evenly.
-- Calendar ranges differ slightly in length (92 vs. 90 days), worth about
-  1-2% on 3M.
+- Headline figures stay on logged entries so they match the Log. On All time
+  the estimates are identical to them; on fixed ranges a chart note says
+  when its bars may differ from the totals.
+- Known noise: calendar ranges differ slightly in length (92 vs. 90 days),
+  worth about 1-2% on 3M.
 
 Still open:
 

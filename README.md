@@ -24,11 +24,12 @@ no account, server or internet connection.
   and model, odometer, license plate and VIN (tap any of the last three to
   copy it), plus its service reminders.
 - **Reports.** Pick a range (3 months, 6 months, a year or all time) and see
-  distance driven, fuel economy with every tank on a best-to-worst strip,
+  distance driven, fuel economy with every tank on a worst-to-best strip,
   cost of ownership split into fuel and service (total and per mile), and
   fuel price against its low and high. Trend arrows compare with the
-  previous period (on all time, the second half against the first), and
-  each card opens a chart.
+  previous period (on all time, the second half of your history against
+  the first) once there's enough history to compare, and each card opens a
+  chart of distance, fuel economy, spending or price over time.
 - **Import / export.** Import backups from AutoTrack (.csv), Drivvo (.xlsx)
   and Fuelio (.csv). Export one .csv per vehicle with its details and full
   history; it opens in Excel or Sheets and imports back into AutoTrack.
@@ -80,7 +81,10 @@ Project layout:
 
 - `src/pages`: the tabs (Log, Garage, Reports, Import / Export) and the
   fillup and service forms
-- `src/lib`: calculations, reminders, import/export, units, make logos
+- `src/components`: shared pieces (vehicle switcher, bottom nav, service
+  reminders, Reports charts and stat visuals)
+- `src/lib`: calculations, Reports stats, reminders, import/export, units,
+  make logos
 - `src/db`: the Dexie database schema
 - `src/assets/make-logos`: bundled manufacturer logos (see its `SOURCES.md`)
 - `android`: the Capacitor Android project
@@ -101,8 +105,8 @@ a signed release APK and publishes it as a GitHub Release (the version name
 comes from the tag):
 
 ```sh
-git tag v0.3.3
-git push origin v0.3.3
+git tag v0.4.4
+git push origin v0.4.4
 ```
 
 Signing uses the repository secrets `ANDROID_KEYSTORE_BASE64`,
