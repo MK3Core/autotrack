@@ -442,10 +442,16 @@ visual pieces in `src/components/ReportViz.tsx`.
   means 6 months of history for 3M and All, a year for 6M, 2 years for 1Y.
   Until then each trend chip shows a dim dash and the caption says when
   trends start (v0.4.2).
-- Known noise: miles and total cost only change at fillups, so even steady
-  driving can trend a few percent on short ranges (a 3-month window can hold
-  13 or 14 weekly fillups). Interpolating the odometer at the range edges
-  would fix miles.
+- The miles trend and Miles over time chart estimate the odometer on each
+  range's exact edge dates (a straight line between the readings either
+  side), so a drive that straddles an edge is split by days instead of
+  counted whole on one side (v0.4.3; steady driving trended up to 25% before).
+  The Tracked headline stays on logged readings so cost per mile still adds
+  up from what's on screen. Unlogged stretches are assumed to be driven
+  evenly.
+- Known noise: total cost still only changes at fillups, so it can trend a
+  few percent on short ranges even with steady driving. Calendar ranges also
+  differ slightly in length (92 vs. 90 days), worth about 2% on 3M.
 - Cards: Driving (distance, fillups, volume), Fuel economy (average, every
   tank on a worst-to-best strip), Cost of ownership (total and per distance,
   split into fuel and service), Fuel price (average, low/high range bar with

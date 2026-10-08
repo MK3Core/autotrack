@@ -144,6 +144,71 @@ export function periodMiles(odometers: { date: string; odometer: number }[], per
   return miles > 0 ? miles : null;
 }
 
+type OdometerReading = { date: string; odometer: number };
+
+/** A day number for an ISO date, for straight-line math between dates. */
+function dayNumber(date: string): number {
+  return Date.parse(date) / 86_400_000;
+}
+
+function nextDay(date: string): string {
+  return new Date(Date.parse(date) + 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Readings in date order, one per date: the highest that day (the end-of-day
+ * odometer). A running max keeps a mistyped reading that goes backwards from
+ * ever producing negative distance.
+ */
+export function odometerTimeline(odometers: OdometerReading[]): { day: number; date: string; odometer: number }[] {
+  const byDate = new Map<string, number>();
+  for (const e of odometers) byDate.set(e.date, Math.max(byDate.get(e.date) ?? -Infinity, e.odometer));
+  let reached = -Infinity;
+  return [...byDate.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, odometer]) => {
+      reached = Math.max(reached, odometer);
+      return { day: dayNumber(date), date, odometer: reached };
+    });
+}
+
+/**
+ * The odometer at the end of `date`: the reading if one was logged that day,
+ * otherwise a straight line between the readings either side of it. Null
+ * before the first reading or after the last, where there's nothing to go on.
+ */
+export function odometerAt(timeline: ReturnType<typeof odometerTimeline>, date: string): number | null {
+  if (!timeline.length) return null;
+  const day = dayNumber(date);
+  if (day < timeline[0].day || day > timeline[timeline.length - 1].day) return null;
+  for (let i = 0; i < timeline.length; i++) {
+    const p = timeline[i];
+    if (p.day === day) return p.odometer;
+    if (p.day > day) {
+      const prev = timeline[i - 1];
+      return prev.odometer + ((p.odometer - prev.odometer) * (day - prev.day)) / (p.day - prev.day);
+    }
+  }
+  return null;
+}
+
+/**
+ * Distance driven within a period, measured from the odometer estimated on
+ * its exact start and end dates. Unlike `periodMiles`, a drive between two
+ * fillups that straddles the start is split by days rather than counted
+ * whole on one side, so equal periods of steady driving come out equal.
+ * Used for the miles trend and chart; the headline stays on logged readings
+ * so cost per mile still adds up from what's on screen.
+ */
+export function estimatedMiles(odometers: OdometerReading[], period: Period): number | null {
+  const timeline = odometerTimeline(odometers);
+  if (!timeline.length) return null;
+  const start = odometerAt(timeline, period.after ?? timeline[0].date);
+  const end = odometerAt(timeline, period.through ?? timeline[timeline.length - 1].date);
+  if (start === null || end === null) return null;
+  return end > start ? end - start : null;
+}
+
 function sum(values: number[]) {
   return values.reduce((a, b) => a + b, 0);
 }
@@ -318,35 +383,47 @@ export function computeSpendBuckets(
   };
 }
 
+/** The last day of a bucket key ("2026-07" -> "2026-07-31"). */
+function bucketEnd(key: string): string {
+  const [y, rest] = key.split('-');
+  if (!rest) return `${y}-12-31`;
+  const startMonth = rest.startsWith('Q') ? (Number(rest.slice(1)) - 1) * 3 + 1 : Number(rest);
+  const months = rest.startsWith('Q') ? 3 : 1;
+  const next = addMonths(`${y}-${String(startMonth).padStart(2, '0')}-01`, months);
+  return new Date(Date.parse(next) - 86_400_000).toISOString().slice(0, 10);
+}
+
 /**
- * Distance per bucket: the furthest odometer reached by the end of each
- * bucket minus the furthest reached by the end of the one before (or the
- * reading `periodMiles` starts from, for the first). A bucket with no entries
- * shows 0, and its driving lands in the next bucket that has one.
+ * Distance per bucket, from the odometer estimated at each bucket's edges
+ * (see `estimatedMiles`), so steady driving gives steady bars and the bars
+ * add up to the period's distance. The period starts at its own start date
+ * when there's a reading on or before it to measure from, otherwise at its
+ * first reading.
  */
 export function computeMilesBuckets(
-  odometers: { date: string; odometer: number }[],
+  odometers: OdometerReading[],
   period: Period,
 ): { bucket: Bucket; rows: MilesBucket[] } {
   const inside = odometers.filter((e) => inPeriod(e.date, period));
-  const from = earliestEntryDate(inside, []);
-  const to = latestEntryDate(inside, []);
-  if (!from || !to) return { bucket: 'month', rows: [] };
-  const bucket = bucketFor(from, to);
+  const first = earliestEntryDate(inside, []);
+  const last = latestEntryDate(inside, []);
+  if (!first || !last) return { bucket: 'month', rows: [] };
 
-  const before = odometers.filter((e) => period.after !== null && e.date <= period.after).map((e) => e.odometer);
-  let reached = before.length ? Math.max(...before) : Math.min(...inside.map((e) => e.odometer));
+  const timeline = odometerTimeline(odometers);
+  const measuredFromStart = period.after !== null && odometerAt(timeline, period.after) !== null;
+  const start = measuredFromStart ? period.after! : first;
+  const end = period.through && odometerAt(timeline, period.through) !== null ? period.through : last;
+  // Driving right after the start date belongs to the bucket that day falls in.
+  const keysFrom = measuredFromStart ? nextDay(start) : first;
+  const bucket = bucketFor(keysFrom, end);
 
-  const maxByBucket = new Map<string, number>();
-  for (const e of inside) {
-    const key = bucketKey(e.date, bucket);
-    maxByBucket.set(key, Math.max(maxByBucket.get(key) ?? -Infinity, e.odometer));
-  }
-  const rows = bucketKeys(from, to, bucket).map((key) => {
-    const max = maxByBucket.get(key);
-    if (max === undefined || max <= reached) return { key, miles: 0 };
-    const miles = max - reached;
-    reached = max;
+  // Edges are rounded rather than each bar, so the bars add up exactly.
+  let reached = Math.round(odometerAt(timeline, start)!);
+  const rows = bucketKeys(keysFrom, end, bucket).map((key) => {
+    const bucketLast = bucketEnd(key);
+    const odometer = Math.round(odometerAt(timeline, bucketLast < end ? bucketLast : end)!);
+    const miles = Math.max(0, odometer - reached);
+    reached = Math.max(reached, odometer);
     return { key, miles };
   });
   return { bucket, rows };

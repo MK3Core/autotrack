@@ -10,6 +10,7 @@ import {
   computePeriodStats,
   computeSpendBuckets,
   earliestEntryDate,
+  estimatedMiles,
   inPeriod,
   latestEntryDate,
   rangePeriods,
@@ -112,7 +113,12 @@ export default function Reports() {
   const mpgTrend = trend((p) => p.avgMpg, (p) => p.tanks.length >= MIN_TREND_SAMPLES);
   const priceTrend = trend((p) => p.avgPrice, enoughFillups);
   const costPerMileTrend = trend((p) => p.totalPerMile, enoughFillups);
-  const milesTrend = trend((p) => p.miles, enoughFillups);
+  // Miles trend from the odometer estimated on each period's exact edges, so a
+  // drive that straddles the boundary is split instead of counted whole.
+  const milesTrend =
+    prev && periods.previous && enoughFillups(recent) && enoughFillups(prev)
+      ? change(estimatedMiles(odometers, periods.recent), estimatedMiles(odometers, periods.previous))
+      : null;
   const totalCostTrend = trend((p) => p.totalCost, enoughFillups);
 
   // From the range's start, or the first entry when the history is shorter.
