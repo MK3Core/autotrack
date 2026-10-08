@@ -35,7 +35,7 @@ const RANGES: { value: ReportRange; label: string; against: string }[] = [
   { value: '3m', label: '3M', against: 'previous 3 months' },
   { value: '6m', label: '6M', against: 'previous 6 months' },
   { value: '1y', label: '1Y', against: 'previous year' },
-  { value: 'all', label: 'All', against: 'earlier' },
+  { value: 'all', label: 'All', against: 'first half' },
 ];
 
 /** Trends need a couple of data points on both sides, or one odd tank decides them. */
@@ -93,7 +93,8 @@ export default function Reports() {
 
   const series = computeMpgSeries(fillups);
   const anchor = latestEntryDate(fillups, records);
-  const periods = rangePeriods(range, anchor);
+  const first = earliestEntryDate(fillups, records);
+  const periods = rangePeriods(range, first, anchor);
   const s = computePeriodStats(series, records, periods.current);
   const recent = range === 'all' ? computePeriodStats(series, records, periods.recent) : s;
   const prev = periods.previous ? computePeriodStats(series, records, periods.previous) : null;
@@ -105,17 +106,15 @@ export default function Reports() {
     if (!prev || !enough(recent) || !enough(prev)) return null;
     return change(pick(recent), pick(prev));
   }
-  // Totals only trend between equal-length periods; "All" has no twin.
-  const totalsTrend = (pick: (p: PeriodStats) => number | null) => (range === 'all' ? null : trend(pick));
 
   const mpgTrend = trend((p) => p.avgMpg, (p) => p.tanks.length >= MIN_TREND_SAMPLES);
   const priceTrend = trend((p) => p.avgPrice, (p) => p.fillupCount >= MIN_TREND_SAMPLES);
   const costPerMileTrend = trend((p) => p.totalPerMile, (p) => p.fillupCount >= MIN_TREND_SAMPLES);
-  const milesTrend = totalsTrend((p) => p.miles);
-  const totalCostTrend = totalsTrend((p) => p.totalCost);
+  const milesTrend = trend((p) => p.miles);
+  const totalCostTrend = trend((p) => p.totalCost);
 
   // A fixed range reads from its nominal start; "All" from the first entry.
-  const from = periods.current.after ?? earliestEntryDate(fillups, records);
+  const from = periods.current.after ?? first;
   const caption = from && anchor ? `${shortDate(from, true)} – ${shortDate(anchor, true)}` : '';
 
   const hasMpg = s.avgMpg !== null;
@@ -148,7 +147,11 @@ export default function Reports() {
         <p className="reports__caption">
           {caption}
           {prev && (
-            <span>{range === 'all' ? ' · Trends: last 3 months vs. earlier' : ` · Trends vs. ${against}`}</span>
+            <span>
+              {range === 'all' && periods.recent.after
+                ? ` · Trends: since ${shortDate(periods.recent.after, true)} vs. before`
+                : ` · Trends vs. ${against}`}
+            </span>
           )}
         </p>
       </header>

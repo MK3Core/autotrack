@@ -27,7 +27,8 @@ no account, server or internet connection.
   distance driven, fuel economy with every tank on a best-to-worst strip,
   cost of ownership split into fuel and service (total and per mile), and
   fuel price against its low and high. Trend arrows compare with the
-  previous period, and each card opens a chart.
+  previous period (on all time, the second half against the first), and
+  each card opens a chart.
 - **Import / export.** Import backups from AutoTrack (.csv), Drivvo (.xlsx)
   and Fuelio (.csv). Export one .csv per vehicle with its details and full
   history; it opens in Excel or Sheets and imports back into AutoTrack.

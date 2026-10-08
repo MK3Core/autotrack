@@ -434,8 +434,9 @@ visual pieces in `src/components/ReportViz.tsx`.
 - A range picker (3M, 6M, 1Y, All) scopes the whole page. Ranges end on the
   vehicle's newest entry, not today, so a parked or sold car still shows data.
 - Trend chips compare a range with the equal-length stretch before it. "All"
-  compares rates (MPG, price, cost per mile) for the last 3 months against
-  everything earlier, and shows no trend on totals.
+  splits the vehicle's history into two equal halves by date and compares
+  the second with the first (v0.4.1; it was last 3 months vs. earlier, which
+  let a handful of tanks decide a lifetime trend).
 - Cards: Driving (distance, fillups, volume), Fuel economy (average, every
   tank on a worst-to-best strip), Cost of ownership (total and per distance,
   split into fuel and service), Fuel price (average, low/high range bar with
