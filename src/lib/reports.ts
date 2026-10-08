@@ -80,12 +80,25 @@ export function midpointDate(from: string, to: string): string {
   return new Date(mid).toISOString().slice(0, 10);
 }
 
+/** "All" needs this much history before it trends, so each half covers at least the shortest fixed range. */
+export const ALL_TREND_MIN_MONTHS = 2 * RANGE_MONTHS['3m'];
+
+/** Months of history a range needs before it can show trends. */
+export function trendHistoryMonths(range: ReportRange): number {
+  return range === 'all' ? ALL_TREND_MIN_MONTHS : 2 * RANGE_MONTHS[range];
+}
+
 /**
  * The period a range covers and the two sides of its trend comparison. A
  * fixed range compares with the equal-length stretch just before it. "All"
  * has nothing before it, so it splits itself into two equal halves by date
- * and compares the second with the first. Either way both sides span the
- * same time, so totals (miles, spending) compare as fairly as rates.
+ * and compares the second with the first.
+ *
+ * `previous` is null until the history fully covers it, i.e. there's a
+ * reading on or before its start to measure distance from. Without one, that
+ * side loses the miles before its first entry but keeps that fillup's cost,
+ * and a half-empty window makes totals look like they jumped. For "All" the
+ * very first entry is that reading, so the first half starts just after it.
  */
 export function rangePeriods(range: ReportRange, first: string | null, anchor: string | null): {
   current: Period;
@@ -95,15 +108,16 @@ export function rangePeriods(range: ReportRange, first: string | null, anchor: s
 } {
   const all: Period = { after: null, through: null };
   if (!first || !anchor) return { current: all, recent: all, previous: null };
+  const covered = addMonths(first, trendHistoryMonths(range)) <= anchor;
   if (range === 'all') {
-    if (first >= anchor) return { current: all, recent: all, previous: null };
+    if (!covered) return { current: all, recent: all, previous: null };
     const mid = midpointDate(first, anchor);
-    return { current: all, recent: { after: mid, through: anchor }, previous: { after: null, through: mid } };
+    return { current: all, recent: { after: mid, through: anchor }, previous: { after: first, through: mid } };
   }
   const months = RANGE_MONTHS[range];
   const start = addMonths(anchor, -months);
   const recent: Period = { after: start, through: anchor };
-  return { current: recent, recent, previous: { after: addMonths(anchor, -2 * months), through: start } };
+  return { current: recent, recent, previous: covered ? { after: addMonths(anchor, -2 * months), through: start } : null };
 }
 
 /**

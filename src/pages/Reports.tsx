@@ -13,6 +13,7 @@ import {
   inPeriod,
   latestEntryDate,
   rangePeriods,
+  trendHistoryMonths,
   type PeriodStats,
   type ReportRange,
 } from '../lib/reports';
@@ -102,19 +103,26 @@ export default function Reports() {
   const odometers = [...fillups, ...records];
 
   /** A trend between the recent and previous periods, when both have enough to compare. */
-  function trend(pick: (p: PeriodStats) => number | null, enough: (p: PeriodStats) => boolean = () => true) {
+  function trend(pick: (p: PeriodStats) => number | null, enough: (p: PeriodStats) => boolean) {
     if (!prev || !enough(recent) || !enough(prev)) return null;
     return change(pick(recent), pick(prev));
   }
+  const enoughFillups = (p: PeriodStats) => p.fillupCount >= MIN_TREND_SAMPLES;
 
   const mpgTrend = trend((p) => p.avgMpg, (p) => p.tanks.length >= MIN_TREND_SAMPLES);
-  const priceTrend = trend((p) => p.avgPrice, (p) => p.fillupCount >= MIN_TREND_SAMPLES);
-  const costPerMileTrend = trend((p) => p.totalPerMile, (p) => p.fillupCount >= MIN_TREND_SAMPLES);
-  const milesTrend = trend((p) => p.miles);
-  const totalCostTrend = trend((p) => p.totalCost);
+  const priceTrend = trend((p) => p.avgPrice, enoughFillups);
+  const costPerMileTrend = trend((p) => p.totalPerMile, enoughFillups);
+  const milesTrend = trend((p) => p.miles, enoughFillups);
+  const totalCostTrend = trend((p) => p.totalCost, enoughFillups);
 
-  // A fixed range reads from its nominal start; "All" from the first entry.
-  const from = periods.current.after ?? first;
+  // From the range's start, or the first entry when the history is shorter.
+  const from = periods.current.after && first && periods.current.after > first ? periods.current.after : first;
+  const historyNeeded = trendHistoryMonths(range);
+  const trendNote = prev
+    ? range === 'all'
+      ? `Trends: since ${shortDate(periods.recent.after!, true)} vs. before`
+      : `Trends vs. ${against}`
+    : `Trends start after ${historyNeeded % 12 ? `${historyNeeded} months` : historyNeeded === 12 ? 'a year' : `${historyNeeded / 12} years`} of history`;
   const caption = from && anchor ? `${shortDate(from, true)} – ${shortDate(anchor, true)}` : '';
 
   const hasMpg = s.avgMpg !== null;
@@ -146,13 +154,7 @@ export default function Reports() {
         </div>
         <p className="reports__caption">
           {caption}
-          {prev && (
-            <span>
-              {range === 'all' && periods.recent.after
-                ? ` · Trends: since ${shortDate(periods.recent.after, true)} vs. before`
-                : ` · Trends vs. ${against}`}
-            </span>
-          )}
+          <span> · {trendNote}</span>
         </p>
       </header>
 
@@ -160,15 +162,19 @@ export default function Reports() {
       <ReportCard
         title="Driving"
         detailLabel={`${u.distTitle} over time`}
-        detail={() => {
-          const { bucket, rows } = computeMilesBuckets(odometers, periods.current);
-          return (
-            <div className="reports__chart">
-              {bucket !== 'month' && <p className="reports__chart-note">By {bucket}</p>}
-              <MilesChart rows={rows} label={bucketLabel} unit={u.dist} />
-            </div>
-          );
-        }}
+        detail={
+          s.miles !== null
+            ? () => {
+                const { bucket, rows } = computeMilesBuckets(odometers, periods.current);
+                return (
+                  <div className="reports__chart">
+                    {bucket !== 'month' && <p className="reports__chart-note">By {bucket}</p>}
+                    <MilesChart rows={rows} label={bucketLabel} unit={u.dist} />
+                  </div>
+                );
+              }
+            : undefined
+        }
       >
         <div className="reports__kpis">
           <div className="kpi kpi--lead">

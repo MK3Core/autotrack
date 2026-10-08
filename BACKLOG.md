@@ -437,6 +437,15 @@ visual pieces in `src/components/ReportViz.tsx`.
   splits the vehicle's history into two equal halves by date and compares
   the second with the first (v0.4.1; it was last 3 months vs. earlier, which
   let a handful of tanks decide a lifetime trend).
+- Trends wait for a full earlier period: a reading on or before the start
+  of the comparison side, so both sides measure distance the same way. That
+  means 6 months of history for 3M and All, a year for 6M, 2 years for 1Y.
+  Until then each trend chip shows a dim dash and the caption says when
+  trends start (v0.4.2).
+- Known noise: miles and total cost only change at fillups, so even steady
+  driving can trend a few percent on short ranges (a 3-month window can hold
+  13 or 14 weekly fillups). Interpolating the odometer at the range edges
+  would fix miles.
 - Cards: Driving (distance, fillups, volume), Fuel economy (average, every
   tank on a worst-to-best strip), Cost of ownership (total and per distance,
   split into fuel and service), Fuel price (average, low/high range bar with

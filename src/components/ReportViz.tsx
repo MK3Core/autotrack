@@ -29,7 +29,8 @@ function monthTick(t: number) {
  * Signed change against the comparison period, colored by whether that
  * direction is good news (more MPG is, a higher price isn't). The arrow
  * carries the direction too, so color is never the only signal. Changes under
- * half a percent read as steady.
+ * half a percent read as steady. With nothing to compare yet it holds its
+ * place as a dim dash, so it's clear a trend will show up there.
  */
 export function Trend({
   value,
@@ -41,7 +42,13 @@ export function Trend({
   /** e.g. "previous 6 months", for the accessible label. */
   against: string;
 }) {
-  if (value === null || !isFinite(value)) return null;
+  if (value === null || !isFinite(value)) {
+    return (
+      <span className="trend trend--none" aria-label="Not enough history for a trend yet">
+        –
+      </span>
+    );
+  }
   const pct = value * 100;
   const abs = Math.abs(pct);
   if (abs < 0.5) {
