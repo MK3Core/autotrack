@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react';
 import {
   Bar,
   BarChart,
@@ -244,24 +244,26 @@ const TIP_LINGER_MS = 1000;
 
 /**
  * Touch leaves Recharts' tooltip stuck until something else is tapped, so
- * hide it a moment after the finger lifts. Mouse hover is left alone.
+ * hide it a moment after the last finger lifts. Touch events (not pointer
+ * events) because the browser cancels the pointer once a drag turns into a
+ * pan, while the finger is still down. Mouse hover is left alone.
  */
 function useTouchTip() {
   const [active, setActive] = useState<boolean | undefined>(undefined);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
-  const lift = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse') return;
+  const lift = (e: TouchEvent) => {
+    if (e.touches.length > 0) return;
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setActive(false), TIP_LINGER_MS);
   };
   const handlers = {
-    onPointerDown: () => {
+    onTouchStart: () => {
       window.clearTimeout(timer.current);
       setActive(undefined);
     },
-    onPointerUp: lift,
-    onPointerCancel: lift,
+    onTouchEnd: lift,
+    onTouchCancel: lift,
   };
   return { active, handlers };
 }
