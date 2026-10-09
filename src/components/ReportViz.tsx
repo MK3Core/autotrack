@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {
   Bar,
   BarChart,
@@ -239,6 +239,33 @@ function TipBox({ title, rows }: { title: string; rows: TipRow[] }) {
   );
 }
 
+/** How long a chart's details stay up after a finger lifts off it. */
+const TIP_LINGER_MS = 1000;
+
+/**
+ * Touch leaves Recharts' tooltip stuck until something else is tapped, so
+ * hide it a moment after the finger lifts. Mouse hover is left alone.
+ */
+function useTouchTip() {
+  const [active, setActive] = useState<boolean | undefined>(undefined);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const lift = (e: PointerEvent) => {
+    if (e.pointerType === 'mouse') return;
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setActive(false), TIP_LINGER_MS);
+  };
+  const handlers = {
+    onPointerDown: () => {
+      window.clearTimeout(timer.current);
+      setActive(undefined);
+    },
+    onPointerUp: lift,
+    onPointerCancel: lift,
+  };
+  return { active, handlers };
+}
+
 const GRID = <CartesianGrid vertical={false} stroke={CHART.grid} />;
 
 const CHART_MARGIN = { top: 8, right: 8, bottom: 0, left: -8 };
@@ -257,44 +284,48 @@ export function FillupLineChart({
   axisFormat: (v: number) => string;
   average?: number | null;
 }) {
+  const tip = useTouchTip();
   const points = data.map((d) => ({ t: new Date(d.date).getTime(), date: d.date, value: d.value }));
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={points} margin={CHART_MARGIN}>
-        {GRID}
-        <XAxis
-          dataKey="t"
-          type="number"
-          scale="time"
-          domain={['dataMin', 'dataMax']}
-          tick={AXIS_TICK}
-          tickFormatter={monthTick}
-          stroke={CHART.grid}
-          minTickGap={24}
-        />
-        <YAxis tick={AXIS_TICK} domain={['auto', 'auto']} stroke="none" width={44} tickFormatter={axisFormat} />
-        {average != null && <ReferenceLine y={average} stroke={CHART.axis} strokeOpacity={0.6} />}
-        <Tooltip
-          cursor={{ stroke: CHART.axis, strokeOpacity: 0.4 }}
-          content={({ active, payload }: TooltipContentProps) => {
-            const p = active && payload?.[0]?.payload;
-            if (!p) return null;
-            return <TipBox title={shortDate(p.date, true)} rows={[{ name, value: format(p.value) }]} />;
-          }}
-        />
-        <Line
-          type="linear"
-          dataKey="value"
-          stroke={CHART.fuel}
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          dot={false}
-          activeDot={{ r: 4, stroke: CHART.surface, strokeWidth: 2 }}
-          isAnimationActive={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div {...tip.handlers}>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={points} margin={CHART_MARGIN}>
+          {GRID}
+          <XAxis
+            dataKey="t"
+            type="number"
+            scale="time"
+            domain={['dataMin', 'dataMax']}
+            tick={AXIS_TICK}
+            tickFormatter={monthTick}
+            stroke={CHART.grid}
+            minTickGap={24}
+          />
+          <YAxis tick={AXIS_TICK} domain={['auto', 'auto']} stroke="none" width={44} tickFormatter={axisFormat} />
+          {average != null && <ReferenceLine y={average} stroke={CHART.axis} strokeOpacity={0.6} />}
+          <Tooltip
+            active={tip.active}
+            cursor={{ stroke: CHART.axis, strokeOpacity: 0.4 }}
+            content={({ active, payload }: TooltipContentProps) => {
+              const p = active && payload?.[0]?.payload;
+              if (!p) return null;
+              return <TipBox title={shortDate(p.date, true)} rows={[{ name, value: format(p.value) }]} />;
+            }}
+          />
+          <Line
+            type="linear"
+            dataKey="value"
+            stroke={CHART.fuel}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            dot={false}
+            activeDot={{ r: 4, stroke: CHART.surface, strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -313,6 +344,7 @@ export function SpendChart({
   rows: { key: string; fuel: number; service: number }[];
   label: (key: string) => string;
 }) {
+  const tip = useTouchTip();
   return (
     <>
       <div className="chart-legend">
@@ -325,44 +357,47 @@ export function SpendChart({
           Service
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={rows} margin={CHART_MARGIN}>
-          {GRID}
-          <XAxis dataKey="key" tick={AXIS_TICK} tickFormatter={label} stroke={CHART.grid} minTickGap={12} />
-          <YAxis
-            tick={AXIS_TICK}
-            stroke="none"
-            width={44}
-            tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
-          />
-          <Tooltip
-            cursor={{ fill: CHART.grid, fillOpacity: 0.6 }}
-            content={({ active, payload }: TooltipContentProps) => {
-              const p = active && payload?.[0]?.payload;
-              if (!p) return null;
-              return (
-                <TipBox
-                  title={label(p.key)}
-                  rows={[
-                    { name: 'Fuel', value: money(p.fuel), color: CHART.fuel },
-                    { name: 'Service', value: money(p.service), color: CHART.service },
-                    { name: 'Total', value: money(p.fuel + p.service) },
-                  ]}
-                />
-              );
-            }}
-          />
-          <Bar dataKey="fuel" stackId="spend" fill={CHART.fuel} maxBarSize={24} isAnimationActive={false} />
-          <Bar
-            dataKey="service"
-            stackId="spend"
-            fill={CHART.service}
-            maxBarSize={24}
-            shape={GappedTop}
-            isAnimationActive={false}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+      <div {...tip.handlers}>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={rows} margin={CHART_MARGIN}>
+            {GRID}
+            <XAxis dataKey="key" tick={AXIS_TICK} tickFormatter={label} stroke={CHART.grid} minTickGap={12} />
+            <YAxis
+              tick={AXIS_TICK}
+              stroke="none"
+              width={44}
+              tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
+            />
+            <Tooltip
+              active={tip.active}
+              cursor={{ fill: CHART.grid, fillOpacity: 0.6 }}
+              content={({ active, payload }: TooltipContentProps) => {
+                const p = active && payload?.[0]?.payload;
+                if (!p) return null;
+                return (
+                  <TipBox
+                    title={label(p.key)}
+                    rows={[
+                      { name: 'Fuel', value: money(p.fuel), color: CHART.fuel },
+                      { name: 'Service', value: money(p.service), color: CHART.service },
+                      { name: 'Total', value: money(p.fuel + p.service) },
+                    ]}
+                  />
+                );
+              }}
+            />
+            <Bar dataKey="fuel" stackId="spend" fill={CHART.fuel} maxBarSize={24} isAnimationActive={false} />
+            <Bar
+              dataKey="service"
+              stackId="spend"
+              fill={CHART.service}
+              maxBarSize={24}
+              shape={GappedTop}
+              isAnimationActive={false}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </>
   );
 }
@@ -377,27 +412,31 @@ export function MilesChart({
   label: (key: string) => string;
   unit: string;
 }) {
+  const tip = useTouchTip();
   return (
-    <ResponsiveContainer width="100%" height={180}>
-      <BarChart data={rows} margin={CHART_MARGIN}>
-        {GRID}
-        <XAxis dataKey="key" tick={AXIS_TICK} tickFormatter={label} stroke={CHART.grid} minTickGap={12} />
-        <YAxis
-          tick={AXIS_TICK}
-          stroke="none"
-          width={44}
-          tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}k` : String(v))}
-        />
-        <Tooltip
-          cursor={{ fill: CHART.grid, fillOpacity: 0.6 }}
-          content={({ active, payload }: TooltipContentProps) => {
-            const p = active && payload?.[0]?.payload;
-            if (!p) return null;
-            return <TipBox title={label(p.key)} rows={[{ name: 'Driven', value: `${p.miles.toLocaleString()} ${unit}` }]} />;
-          }}
-        />
-        <Bar dataKey="miles" fill={CHART.fuel} maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div {...tip.handlers}>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={rows} margin={CHART_MARGIN}>
+          {GRID}
+          <XAxis dataKey="key" tick={AXIS_TICK} tickFormatter={label} stroke={CHART.grid} minTickGap={12} />
+          <YAxis
+            tick={AXIS_TICK}
+            stroke="none"
+            width={44}
+            tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}k` : String(v))}
+          />
+          <Tooltip
+            active={tip.active}
+            cursor={{ fill: CHART.grid, fillOpacity: 0.6 }}
+            content={({ active, payload }: TooltipContentProps) => {
+              const p = active && payload?.[0]?.payload;
+              if (!p) return null;
+              return <TipBox title={label(p.key)} rows={[{ name: 'Driven', value: `${p.miles.toLocaleString()} ${unit}` }]} />;
+            }}
+          />
+          <Bar dataKey="miles" fill={CHART.fuel} maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
