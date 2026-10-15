@@ -16,6 +16,8 @@ export interface Vehicle {
   /** Labels only: numbers are stored raw. Missing means miles / gallons. */
   distanceUnit?: DistanceUnit;
   fuelUnit?: FuelUnit;
+  /** ISO 4217 code, labels only like the units. Missing means USD. */
+  currency?: string;
   active: boolean;
   notes?: string;
   createdAt: string;

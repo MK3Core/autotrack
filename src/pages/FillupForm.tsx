@@ -195,27 +195,7 @@ export default function FillupForm() {
         <fieldset className="fillup-form__triangle">
           <legend>Enter any two: the third is calculated{filledCount < 2 ? ' automatically' : ''}</legend>
           <label>
-            Price / {u.vol} ($)
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.001"
-              value={values.pricePerGallon ?? ''}
-              onChange={(e) => handleTriangleChange('pricePerGallon', e.target.value)}
-            />
-          </label>
-          <label>
-            {u.volTitle}
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.001"
-              value={values.gallons ?? ''}
-              onChange={(e) => handleTriangleChange('gallons', e.target.value)}
-            />
-          </label>
-          <label>
-            Total cost ($)
+            Total cost ({u.cur})
             <input
               type="text"
               inputMode="decimal"
@@ -235,6 +215,26 @@ export default function FillupForm() {
                 handleTriangleChange('totalCost', e.target.value);
               }}
               onBlur={() => setTotalCostFocused(false)}
+            />
+          </label>
+          <label>
+            Price / {u.vol} ({u.cur})
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.001"
+              value={values.pricePerGallon ?? ''}
+              onChange={(e) => handleTriangleChange('pricePerGallon', e.target.value)}
+            />
+          </label>
+          <label>
+            {u.volTitle}
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.001"
+              value={values.gallons ?? ''}
+              onChange={(e) => handleTriangleChange('gallons', e.target.value)}
             />
           </label>
         </fieldset>

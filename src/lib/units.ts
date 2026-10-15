@@ -23,6 +23,10 @@ export interface Units {
   volTitle: string;
   /** "MPG", "km/gal", "mi/L" or "km/L" */
   economy: string;
+  /** ISO 4217 code, e.g. "USD" */
+  currency: string;
+  /** "$", "€", "£", ... */
+  cur: string;
 }
 
 export const DISTANCE_UNITS: { value: DistanceUnit; label: string }[] = [
@@ -35,11 +39,36 @@ export const FUEL_UNITS: { value: FuelUnit; label: string }[] = [
   { value: 'L', label: 'Liters' },
 ];
 
-export function unitsFor(vehicle: Pick<Vehicle, 'distanceUnit' | 'fuelUnit'> | null | undefined): Units {
+/** Common picks for the vehicle form; an imported code outside this list still works. */
+export const CURRENCIES = ['USD', 'CAD', 'MXN', 'EUR', 'GBP', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'AUD', 'NZD', 'JPY', 'CNY', 'KRW', 'INR', 'BRL', 'ZAR'];
+
+/** The currency's short symbol in the user's locale: "$", "€", "¥". */
+export function currencySymbol(currency: string): string {
+  return (
+    new Intl.NumberFormat(undefined, { style: 'currency', currency, currencyDisplay: 'narrowSymbol' })
+      .formatToParts(0)
+      .find((p) => p.type === 'currency')?.value ?? currency
+  );
+}
+
+/** Reads an ISO 4217 code ("usd", "EUR") or a few unambiguous symbols. */
+export function parseCurrency(raw: unknown): string | undefined {
+  const s = String(raw ?? '').trim();
+  const bySymbol: Record<string, string> = { '€': 'EUR', '£': 'GBP', '¥': 'JPY', '₹': 'INR', '₩': 'KRW' };
+  if (bySymbol[s]) return bySymbol[s];
+  if (!/^[a-z]{3}$/i.test(s)) return undefined;
+  const code = s.toUpperCase();
+  return Intl.supportedValuesOf('currency').includes(code) ? code : undefined;
+}
+
+export function unitsFor(
+  vehicle: Pick<Vehicle, 'distanceUnit' | 'fuelUnit' | 'currency'> | null | undefined,
+): Units {
   const distance = vehicle?.distanceUnit ?? 'mi';
   const fuel = vehicle?.fuelUnit ?? 'gal';
   const km = distance === 'km';
   const liters = fuel === 'L';
+  const currency = vehicle?.currency ?? 'USD';
   return {
     distance,
     fuel,
@@ -50,6 +79,8 @@ export function unitsFor(vehicle: Pick<Vehicle, 'distanceUnit' | 'fuelUnit'> | n
     vol: liters ? 'L' : 'gal',
     volTitle: liters ? 'Liters' : 'Gallons',
     economy: km ? (liters ? 'km/L' : 'km/gal') : liters ? 'mi/L' : 'MPG',
+    currency,
+    cur: currencySymbol(currency),
   };
 }
 

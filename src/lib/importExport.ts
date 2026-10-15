@@ -5,7 +5,7 @@ import { Share } from '@capacitor/share';
 import { v4 as uuidv4 } from 'uuid';
 import { normalizeVin } from './vehicle';
 import { db } from '../db';
-import { parseDistanceUnit, parseFuelUnit } from './units';
+import { parseCurrency, parseDistanceUnit, parseFuelUnit } from './units';
 import type { Vehicle, Fillup, MaintenanceRecord, ServiceItem, ServiceSchedule } from '../types';
 import { serviceKey } from './maintenance';
 import { computeThirdValue } from './calc';
@@ -117,6 +117,7 @@ const VEHICLE_ALIASES = {
   // Text values only ("mi"/"km", "gal"/"L"); numeric unit codes are ignored.
   distanceUnit: ['distanceunit', 'distunit'],
   fuelUnit: ['fuelunit'],
+  currency: ['currency', 'currencycode'],
   active: ['active'],
   notes: ['notes'],
 };
@@ -464,6 +465,7 @@ export async function importFile(file: File): Promise<ImportSummary> {
     if (cap !== undefined && cap > 0) vehicle.fuelCapacityGal = cap;
     vehicle.distanceUnit = parseDistanceUnit(pick(nrow, VEHICLE_ALIASES.distanceUnit)) ?? vehicle.distanceUnit;
     vehicle.fuelUnit = parseFuelUnit(pick(nrow, VEHICLE_ALIASES.fuelUnit)) ?? vehicle.fuelUnit;
+    vehicle.currency = parseCurrency(pick(nrow, VEHICLE_ALIASES.currency)) ?? vehicle.currency;
     vehicle.active = toBool(pick(nrow, VEHICLE_ALIASES.active), true);
     const notes = pick(nrow, VEHICLE_ALIASES.notes);
     if (notes) vehicle.notes = String(notes);
@@ -662,6 +664,7 @@ export async function buildVehicleCsv(vehicleId: string): Promise<{ text: string
       'Fuel capacity(gal)': vehicle.fuelCapacityGal ?? '',
       'Distance unit': vehicle.distanceUnit ?? 'mi',
       'Fuel unit': vehicle.fuelUnit ?? 'gal',
+      Currency: vehicle.currency ?? 'USD',
       Active: vehicle.active ? 'Yes' : 'No',
       Notes: vehicle.notes ?? '',
     },

@@ -22,7 +22,7 @@ import {
   type ReportRange,
 } from '../lib/reports';
 import { unitsFor } from '../lib/units';
-import { CHART, money, rate, shortDate } from '../lib/reportFormat';
+import { CHART, amount, money, rate, shortDate } from '../lib/reportFormat';
 import {
   CostSplit,
   FillupLineChart,
@@ -295,20 +295,20 @@ export default function Reports() {
           return (
             <div className="reports__chart">
               <ChartNote bucket={bucket} />
-              <SpendChart rows={rows} label={bucketLabel} />
+              <SpendChart rows={rows} label={bucketLabel} currency={u.currency} />
             </div>
           );
         }}
       >
         <div className="hero hero--split">
           <div className="hero__main">
-            <span className="hero__value">{money(s.totalCost)}</span>
+            <span className="hero__value">{money(s.totalCost, u.currency)}</span>
             <span className="hero__unit">
               total <Trend value={totalCostTrend} good="down" against={against} />
             </span>
           </div>
           <div className="hero__side">
-            <span className="hero__side-value">{s.totalPerMile !== null ? rate(s.totalPerMile) : '–'}</span>
+            <span className="hero__side-value">{s.totalPerMile !== null ? rate(s.totalPerMile, u.currency) : '–'}</span>
             <span className="hero__unit">
               per {u.perDist} <Trend value={costPerMileTrend} good="down" against={against} />
             </span>
@@ -331,8 +331,8 @@ export default function Reports() {
                 <i className="key key--dot" style={{ background: CHART.fuel }} />
                 Fuel
               </th>
-              <td>{money(s.fuelCost)}</td>
-              <td>{s.fuelPerMile !== null ? rate(s.fuelPerMile) : '–'}</td>
+              <td>{money(s.fuelCost, u.currency)}</td>
+              <td>{s.fuelPerMile !== null ? rate(s.fuelPerMile, u.currency) : '–'}</td>
             </tr>
             <tr>
               <th scope="row">
@@ -340,8 +340,8 @@ export default function Reports() {
                 Service
                 {s.serviceCount > 0 && <span className="cost-table__count">{s.serviceCount}</span>}
               </th>
-              <td>{money(s.serviceCost)}</td>
-              <td>{s.servicePerMile !== null ? rate(s.servicePerMile) : '–'}</td>
+              <td>{money(s.serviceCost, u.currency)}</td>
+              <td>{s.servicePerMile !== null ? rate(s.servicePerMile, u.currency) : '–'}</td>
             </tr>
           </tbody>
         </table>
@@ -357,9 +357,9 @@ export default function Reports() {
                 <div className="reports__chart">
                   <FillupLineChart
                     data={pricePoints}
-                    name={`$ / ${u.vol}`}
-                    format={rate}
-                    axisFormat={(v) => `$${v.toFixed(2)}`}
+                    name={`${u.cur} / ${u.vol}`}
+                    format={(v) => rate(v, u.currency)}
+                    axisFormat={(v) => amount(v, u.currency)}
                     average={s.avgPrice}
                   />
                 </div>
@@ -370,7 +370,7 @@ export default function Reports() {
         {hasPrice ? (
           <>
             <div className="hero">
-              <span className="hero__value">{rate(s.avgPrice!)}</span>
+              <span className="hero__value">{rate(s.avgPrice!, u.currency)}</span>
               <span className="hero__unit">avg / {u.vol}</span>
               <Trend value={priceTrend} good="down" against={against} />
             </div>
@@ -380,17 +380,18 @@ export default function Reports() {
                 high={s.highPrice!.price}
                 avg={s.avgPrice!}
                 latest={s.latestPrice!.price}
+                currency={u.currency}
                 ends={[
                   <StripEnd
                     key="low"
                     label="Low"
-                    value={rate(s.lowPrice!.price)}
+                    value={rate(s.lowPrice!.price, u.currency)}
                     meta={shortDate(s.lowPrice!.date, true)}
                   />,
                   <StripEnd
                     key="high"
                     label="High"
-                    value={rate(s.highPrice!.price)}
+                    value={rate(s.highPrice!.price, u.currency)}
                     meta={shortDate(s.highPrice!.date, true)}
                     align="end"
                   />,

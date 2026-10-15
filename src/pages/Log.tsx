@@ -5,6 +5,7 @@ import { db } from '../db';
 import CheckEngineIcon from '../components/CheckEngineIcon';
 import { useVehicles } from '../lib/VehicleContext';
 import { unitsFor } from '../lib/units';
+import { amount } from '../lib/reportFormat';
 import { computeLifetimeMpgStats, computeMpgSeries } from '../lib/calc';
 import { useInfiniteScroll } from '../lib/useInfiniteScroll';
 import { computeReminders, describeDueIn, latestOdometer } from '../lib/maintenance';
@@ -315,7 +316,7 @@ export default function Log() {
                   </span>
                   <span className="timeline__entry-sub">{dayLabel(r.date)}</span>
                   <span className="timeline__entry-sub timeline__entry-price">
-                    {r.totalCost !== undefined ? `$${r.totalCost.toFixed(2)}` : ''}
+                    {r.totalCost !== undefined ? amount(r.totalCost, u.currency) : ''}
                   </span>
                 </Link>
               </div>
@@ -342,7 +343,7 @@ export default function Log() {
                 )}
                 <span className="timeline__entry-sub">{dayLabel(f.date)}</span>
                 <span className="timeline__entry-sub timeline__entry-price">
-                  {f.totalCost !== undefined ? `$${f.totalCost.toFixed(2)}` : ''}
+                  {f.totalCost !== undefined ? amount(f.totalCost, u.currency) : ''}
                 </span>
               </Link>
             </div>

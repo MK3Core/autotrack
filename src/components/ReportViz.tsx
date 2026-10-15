@@ -14,7 +14,7 @@ import {
   type BarShapeProps,
   type TooltipContentProps,
 } from 'recharts';
-import { CHART, money, rate, shortDate } from '../lib/reportFormat';
+import { CHART, money, moneyTick, rate, shortDate } from '../lib/reportFormat';
 import './ReportViz.css';
 
 const AXIS_TICK = { fontSize: 11, fill: CHART.axis };
@@ -161,12 +161,14 @@ export function PriceRange({
   high,
   avg,
   latest,
+  currency,
   ends,
 }: {
   low: number;
   high: number;
   avg: number;
   latest: number;
+  currency: string;
   ends: [ReactNode, ReactNode];
 }) {
   const span = high - low || 1;
@@ -184,7 +186,7 @@ export function PriceRange({
       <div className="strip__legend">
         <span>
           <i className="key key--dot key--accent" />
-          Latest {rate(latest)}
+          Latest {rate(latest, currency)}
         </span>
         <span>
           <i className="key key--tick" />
@@ -342,9 +344,11 @@ function GappedTop(props: BarShapeProps) {
 export function SpendChart({
   rows,
   label,
+  currency,
 }: {
   rows: { key: string; fuel: number; service: number }[];
   label: (key: string) => string;
+  currency: string;
 }) {
   const tip = useTouchTip();
   return (
@@ -368,7 +372,7 @@ export function SpendChart({
               tick={AXIS_TICK}
               stroke="none"
               width={44}
-              tickFormatter={(v: number) => (v >= 1000 ? `$${Math.round(v / 100) / 10}k` : `$${v}`)}
+              tickFormatter={(v: number) => moneyTick(v, currency)}
             />
             <Tooltip
               active={tip.active}
@@ -380,9 +384,9 @@ export function SpendChart({
                   <TipBox
                     title={label(p.key)}
                     rows={[
-                      { name: 'Fuel', value: money(p.fuel), color: CHART.fuel },
-                      { name: 'Service', value: money(p.service), color: CHART.service },
-                      { name: 'Total', value: money(p.fuel + p.service) },
+                      { name: 'Fuel', value: money(p.fuel, currency), color: CHART.fuel },
+                      { name: 'Service', value: money(p.service, currency), color: CHART.service },
+                      { name: 'Total', value: money(p.fuel + p.service, currency) },
                     ]}
                   />
                 );

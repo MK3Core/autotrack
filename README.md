@@ -7,10 +7,10 @@ no account, server or internet connection.
 ## Features
 
 - **Multiple vehicles.** Switch between them from the top of the screen. Each
-  vehicle has its own units (miles or kilometers, gallons or liters) and can
-  be marked inactive to hide it from the switcher.
+  vehicle has its own units (miles or kilometers, gallons or liters) and
+  currency, and can be marked inactive to hide it from the switcher.
 - **Fillups.** Log date, odometer, fuel grade, station and notes. Enter any
-  two of price per unit, amount and total cost and the third is calculated.
+  two of total cost, price per unit and amount and the third is calculated.
   Partial tanks and missed fillups are handled so fuel economy stays accurate.
 - **Log.** One timeline of fillups and service visits, grouped by month, with
   each fillup's fuel economy ranked against the vehicle's own history.

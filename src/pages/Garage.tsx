@@ -11,7 +11,7 @@ import { copyText } from '../lib/clipboard';
 import { deleteVehicleMaintenance, latestOdometer } from '../lib/maintenance';
 import { normalizeVin, VIN_LENGTH } from '../lib/vehicle';
 import { makeLogoUrl } from '../lib/makeLogos';
-import { DISTANCE_UNITS, FUEL_UNITS, unitsFor } from '../lib/units';
+import { CURRENCIES, DISTANCE_UNITS, FUEL_UNITS, currencySymbol, unitsFor } from '../lib/units';
 import type { DistanceUnit, Fillup, FuelUnit, MaintenanceRecord, Vehicle } from '../types';
 import './Garage.css';
 
@@ -25,6 +25,7 @@ const emptyForm = {
   fuelCapacityGal: '',
   distanceUnit: 'mi' as DistanceUnit,
   fuelUnit: 'gal' as FuelUnit,
+  currency: 'USD',
   notes: '',
 };
 
@@ -125,6 +126,7 @@ export default function Garage() {
       fuelCapacityGal: v.fuelCapacityGal ? String(v.fuelCapacityGal) : '',
       distanceUnit: v.distanceUnit ?? 'mi',
       fuelUnit: v.fuelUnit ?? 'gal',
+      currency: v.currency ?? 'USD',
       notes: v.notes ?? '',
     });
   }
@@ -144,6 +146,7 @@ export default function Garage() {
       fuelCapacityGal: form.fuelCapacityGal ? parseFloat(form.fuelCapacityGal) : undefined,
       distanceUnit: form.distanceUnit,
       fuelUnit: form.fuelUnit,
+      currency: form.currency,
       notes: form.notes.trim() || undefined,
       active: true,
       createdAt: new Date().toISOString(),
@@ -199,7 +202,7 @@ export default function Garage() {
               <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} />
             </label>
           </div>
-          {/* Labels only: switching units relabels existing numbers, it doesn't convert them. */}
+          {/* Labels only: switching units or currency relabels existing numbers, it doesn't convert them. */}
           <div className="vehicle-form__row">
             <label>
               Distance
@@ -230,11 +233,14 @@ export default function Garage() {
           </div>
           <div className="vehicle-form__row">
             <label>
-              License plate
-              <input
-                value={form.licensePlate}
-                onChange={(e) => setForm({ ...form, licensePlate: e.target.value })}
-              />
+              Currency
+              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
+                {(CURRENCIES.includes(form.currency) ? CURRENCIES : [form.currency, ...CURRENCIES]).map((c) => (
+                  <option key={c} value={c}>
+                    {c} {currencySymbol(c) !== c ? currencySymbol(c) : ''}
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               Fuel capacity ({unitsFor(form).vol})
@@ -246,6 +252,10 @@ export default function Garage() {
               />
             </label>
           </div>
+          <label>
+            License plate
+            <input value={form.licensePlate} onChange={(e) => setForm({ ...form, licensePlate: e.target.value })} />
+          </label>
           <label>
             VIN
             <input

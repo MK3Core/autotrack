@@ -15,14 +15,34 @@ export const CHART = {
   surface: '#171a21',
 };
 
+function currencyFormat(currency: string, extra: Intl.NumberFormatOptions = {}) {
+  return new Intl.NumberFormat(undefined, { style: 'currency', currency, currencyDisplay: 'narrowSymbol', ...extra });
+}
+
+/** The currency's usual decimals: 2 for dollars and euros, 0 for yen. */
+function minorDigits(currency: string): number {
+  return currencyFormat(currency).resolvedOptions().maximumFractionDigits ?? 2;
+}
+
+/** An exact amount in the currency's usual decimals ("$842.10", "¥5,400"). */
+export function amount(n: number, currency: string): string {
+  return currencyFormat(currency).format(n);
+}
+
 /** "$842.10" below a thousand, "$4,213" from there up. */
-export function money(n: number): string {
-  return n >= 1000 ? `$${Math.round(n).toLocaleString()}` : `$${n.toFixed(2)}`;
+export function money(n: number, currency: string): string {
+  return n >= 1000 ? currencyFormat(currency, { maximumFractionDigits: 0 }).format(n) : amount(n, currency);
 }
 
 /** Cost per distance or per volume, to a tenth of a cent ("$0.183", "$4.019"). */
-export function rate(n: number): string {
-  return `$${n.toFixed(3)}`;
+export function rate(n: number, currency: string): string {
+  const digits = minorDigits(currency) + 1;
+  return currencyFormat(currency, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
+}
+
+/** Short chart axis ticks: "$850", "$1.2K". */
+export function moneyTick(n: number, currency: string): string {
+  return currencyFormat(currency, { notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 }).format(n);
 }
 
 export function shortDate(date: string, withYear = false): string {

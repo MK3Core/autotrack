@@ -282,7 +282,7 @@ export default function ServiceForm() {
                 </label>
               )}
               <label>
-                Cost ($)
+                Cost ({u.cur})
                 <input
                   type="number"
                   inputMode="decimal"
@@ -353,7 +353,7 @@ export default function ServiceForm() {
         </div>
 
         <label>
-          Total cost ($)
+          Total cost ({u.cur})
           <input
             type="number"
             inputMode="decimal"
